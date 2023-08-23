@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "viur-scriptor-api"
+version = "0.0.1"
+authors = [
+  { name="Cian", email="co@mausbrand.de" },
+]
+description = "This is the internal Scriptor library that the viur-scriptor utilizes. The API includes components for networking as well as parts related to the Scriptor's files."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Software Development :: Interpreters",
+    "Operating System :: OS Independent",
+]
+
+[tool.flit.metadata]
+module = "viur.scriptor"
+
+
+[tool.hatch.build]
+exclude = [
+  "/.*",
+  "/docs",
+  "/tests",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/viur-framework/viur-scriptor-api"
+"Bug Tracker" = "https://github.com/viur-framework/viur-scriptor-api/issues"

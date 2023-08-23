@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+sphinx = "7.2.2"
+sphinx-rtd-theme = "1.3.0"
+click = "8.1.7"
+sphinx-autoapi = "2.1.1"
+
+[dev-packages]
+twine = "4.0.2"
+build = "0.10.0"
+
+[requires]
+python_version = "3.10"
+
+[scripts]
+test = "python -m unittest"
+pypi-build = "python -m build --wheel"
+pypi-upload = "twine upload dist/*"
