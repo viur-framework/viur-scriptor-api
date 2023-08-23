@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "viur-scriptor-api"
-version = "0.0.1"
+version = "0.0.5"
 authors = [
   { name="Cian", email="co@mausbrand.de" },
 ]
@@ -18,6 +18,10 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Topic :: Software Development :: Interpreters",
     "Operating System :: OS Independent",
+]
+dependencies = [
+  "click==8.1.7",
+  "requests==2.31.0"
 ]
 
 [tool.flit.metadata]
