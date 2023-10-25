@@ -18,6 +18,8 @@ if is_pyodide_context():
 else:
     import asyncio
     import click
+    import json
+    _input = input
 
 import time
 import datetime
@@ -251,5 +253,48 @@ async def table(header: list[str], rows: list[list[str]], *, select=False, multi
         manager.resultValue = None
 
         return ret
-    else:
-        pass
+
+    column_widths = [max(len(header[i]), max(len(str(row[i])) for row in rows)) for i in range(len(header))]
+    separator = "+".join(["-" * (width + 2) for width in column_widths])
+
+    print(separator)
+    print("|", end="")
+    for i in range(len(header)):
+        print(f" {header[i]:^{column_widths[i]}} |", end="")
+    print("\n" + separator)
+
+    for i in range(len(rows)):
+        print("|", end="")
+        for j in range(len(header)):
+            print(f" {rows[i][j]:^{column_widths[j]}} |", end="")
+        print("\n" + separator)
+
+    if select:
+        while True:
+            if multiple:
+                selected = _input("Select a multiple (example: [0, 1, 2] ...) ")
+            else:
+                selected = _input("Select a row (example: 1, 2, ...) ")
+            try:
+                if not multiple:
+                    selected = int(selected)
+                    if 0 <= selected < len(rows):
+                        return rows[selected]
+                    else:
+                        print("Wrong input, try it again.")
+                else:
+                    selected = json.loads(selected)
+                    if isinstance(selected, int):
+                        if 0 <= selected < len(rows):
+                            return rows[selected]
+                    if not isinstance(selected, list):
+                        print("Wrong input, try it again.")
+                    else:
+                        if any([not isinstance(e, int) for e in selected]):
+                            print("Wrong input, try it again.")
+                            continue
+                        return [rows[e] for e in selected if e >= 0 and e < len(rows)]
+            except ValueError:
+                print("Wrong Input.")
+
+    return None

@@ -46,8 +46,18 @@ def params():
 		from manager import params
 
 		params = params.to_py()
-	
+
 	return params
+
+
+def get_language():
+	lang = "en"
+	if is_pyodide_context():
+		from manager import language
+
+		lang = language
+
+	return str(lang)
 
 
 viur.prototypes = prototypes()
