@@ -19,6 +19,7 @@ else:
     import asyncio
     import click
     import json
+
     _input = input
 
 import time
@@ -32,6 +33,7 @@ async def wait():
             await manager.sleep(250)
     else:
         await asyncio.sleep(250)
+
 
 async def alert(text: str, image: str = "") -> None:
     """
@@ -70,20 +72,22 @@ async def confirm(text: str, *, title: str = "Confirm", allow_cancel: bool = Fal
     return ret
 
 
-async def input(text: str, *, title: str = "Input", type: str = "input", use_time: bool = False, empty: bool = False, image: str = "") -> datetime.datetime|str|float|int:
+async def input(text: str, *, title: str = "Input", type: str = "input", use_time: bool = False, empty: bool = False,
+                image: str = "") -> datetime.datetime | str | float | int:
     """
     Provide a dialog asking for some value.
     """
 
     if is_pyodide_context():
-        _self.postMessage(type="input", title=title, text=text, input_type=type, use_time=use_time, empty=empty, image=image)
+        _self.postMessage(type="input", title=title, text=text, input_type=type, use_time=use_time, empty=empty,
+                          image=image)
         await wait()
         tmp = manager.copyResult()
         manager.reset()
         manager.resultValue = None
 
         if type == "date":
-            return datetime.datetime.fromtimestamp(math.floor(tmp/1000.0))
+            return datetime.datetime.fromtimestamp(math.floor(tmp / 1000.0))
 
         return tmp
     else:
@@ -95,7 +99,6 @@ async def input(text: str, *, title: str = "Input", type: str = "input", use_tim
                     return datetime.date.fromisoformat(date_text)
                 except ValueError:
                     click.echo("Incorrect data format, should be YYYY-MM-DD")
-
 
                 return None
 
@@ -127,6 +130,7 @@ async def input(text: str, *, title: str = "Input", type: str = "input", use_tim
                     except:
                         return None
                 return None
+
             while True:
                 ret = check_number(ret)
                 if ret is None:
@@ -139,6 +143,7 @@ async def input(text: str, *, title: str = "Input", type: str = "input", use_tim
         else:
             return ret
 
+
 async def input_date(*args, **kwargs) -> datetime.datetime:
     """
         Provide a input asking for datetime value.
@@ -146,17 +151,21 @@ async def input_date(*args, **kwargs) -> datetime.datetime:
     kwargs |= {"type": "date"}
     return await input(*args, **kwargs)
 
-async def input_number(*args, **kwargs) -> int|float:
+
+async def input_number(*args, **kwargs) -> int | float:
     kwargs |= {"type": "number"}
     return await input(*args, **kwargs)
+
 
 async def input_string(*args, **kwargs) -> str:
     kwargs |= {"type": "string"}
     return await input(*args, **kwargs)
 
+
 async def input_text(*args, **kwargs) -> str:
     kwargs |= {"type": "text"}
     return await input(*args, **kwargs)
+
 
 input.date = input_date
 input.number = input_number
@@ -165,14 +174,14 @@ input.string = input_string
 
 
 async def select(text: str, choices: tuple[str] | list[str] | dict[str, str], *,
-                 title: str = "Select", multiple: bool = False, image: str = "") -> str|list[str]:
+                 title: str = "Select", multiple: bool = False, image: str = "") -> str | list[str]:
     if isinstance(choices, (list, tuple)):
         if all([isinstance(k, (dict)) for k in choices]):
             # Image Mode
-            choices = {str(k): {"text": str(k.get("text", "")), "image": str(k.get("image", "")) } for k in choices}
+            choices = {str(k): {"text": str(k.get("text", "")), "image": str(k.get("image", ""))} for k in choices}
         else:
             choices = {str(k): str(k) for k in choices}
- 
+
     if not isinstance(choices, dict):
         raise ValueError("'choices' must be either a list or a dict.")
 
@@ -214,6 +223,7 @@ async def select(text: str, choices: tuple[str] | list[str] | dict[str, str], *,
 
     return ret
 
+
 async def diffcmp(title: str, changes: list[list[str]], image: str = "") -> None:
     if is_pyodide_context():
         for i in range(len(changes)):
@@ -231,7 +241,10 @@ async def diffcmp(title: str, changes: list[list[str]], image: str = "") -> None
         ret = "\n".join([f"{e[0]}\t\t\t{e[1]} -> {e[2]}" for e in changes])
         click.echo(ret)
 
-async def table(header: list[str], rows: list[list[str]], *, select=False, multiple=False, image: str = "") -> str|list[str]|None:
+
+async def table(header: list[str], rows: list[list[str]], *, select=False, multiple=False, image: str = "") -> str | \
+                                                                                                               list[
+                                                                                                                   str] | None:
     if is_pyodide_context():
         for i in range(len(rows)):
             rows[i] = pyodide.ffi.to_js(rows[i])
@@ -242,7 +255,7 @@ async def table(header: list[str], rows: list[list[str]], *, select=False, multi
         _self.postMessage(type="table", header=header, rows=rows, select=select, multiple=multiple, image=image)
 
         await wait()
-        
+
         ret = manager.resultValue.to_py()
         ret = [rows[idx] for idx in ret]
 

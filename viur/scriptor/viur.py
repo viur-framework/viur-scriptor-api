@@ -6,8 +6,8 @@ if is_pyodide_context():
     from js import console, fetch
     from config import BASE_URL
 
-class viur:
 
+class viur:
     class request(Request):
         def __init__(self, method: str, url: str, params=None, renderer: str = None):
 
@@ -23,15 +23,14 @@ class viur:
             url = self.build_url(prefix + url)
 
             super().__init__(
-                method, 
-                url, 
+                method,
+                url,
                 credentials=True,
-                data=params, 
-                headers= {
+                data=params,
+                headers={
                     "Accept": "application/json, text/plain, */*",
                 }
             )
-
 
         @staticmethod
         def build_url(url):
@@ -46,13 +45,11 @@ class viur:
             await _request.perform()
             return await _request.json()
 
-
         @staticmethod
         async def post(*args, **kwargs):
             _request = viur.request("POST", *args, **kwargs)
             await _request.perform()
             return await _request.json()
-
 
         @staticmethod
         async def secure_post(url, params=None, renderer: str = None):
@@ -71,8 +68,6 @@ class viur:
 
             return await viur.request.post(url, params, renderer)
 
-
-
     @staticmethod
     def build_url(action: str, url: str, module: str, group: str = "", key: str = ""):
         _url = url
@@ -84,7 +79,6 @@ class viur:
             if key:
                 _url += f"/{key}"
         return _url
-
 
     @staticmethod
     async def view(*, url: str = "", module: str = "", key: str = "", params: dict = None, group: str = "", **kwargs):
@@ -108,7 +102,6 @@ class viur:
     async def structure(*, url: str = "", module: str = "", group: str = "", **kwargs):
         url = viur.build_url("structure", url, module, group)
 
-
         if not (ret := await viur.request.get(url, **kwargs)):
             return ret
 
@@ -117,7 +110,6 @@ class viur:
     @staticmethod
     async def preview(*, url: str = "", module: str = "", group: str = "", params: dict = None, **kwargs):
         url = viur.build_url("preview", url, module, group)
-
 
         if not (ret := await viur.request.secure_post(url, params, **kwargs)):
             return ret
@@ -202,5 +194,3 @@ class viur:
                 self.cursor = None
 
             return await self.__anext__()
-
-
