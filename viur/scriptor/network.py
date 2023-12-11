@@ -5,131 +5,168 @@ from .utils import is_pyodide_context
 from abc import abstractmethod
 
 if is_pyodide_context():
-    from js import console, fetch, FormData
-    from pyodide.ffi import to_js
-    from config import BASE_URL
+	from js import console, fetch, FormData
+	from pyodide.ffi import to_js
+	from config import BASE_URL
 else:
-    import requests
-    from requests.sessions import cookiejar_from_dict
+	import requests
+	from requests.sessions import cookiejar_from_dict
 
-from .logger import Logging
-
+from .logger import Logging as logging
 import traceback
 
 
 class Request:
-    COOKIES = {}
+	COOKIES = {}
 
-    def __init__(self, method: str, url: str, credentials: bool = False, headers: dict = None, data: dict = None) -> None:
-        self._status = None
-        self._result = None
+	def __init__(self, method: str, url: str, credentials: bool = False, headers: dict = None,
+				 data: dict = None) -> None:
+		self._status = None
+		self._result = None
 
-        self._method = method.upper()
-        self._data = None
-        self._credentials = credentials
+		self._method = method.upper()
+		self._data = None
+		self._credentials = credentials
 
-        if data:
-            if method == "GET":
-                url += "?" + _urlencode(data)
-            else:
-                if is_pyodide_context():
-                    self._data = FormData.new()
-                    for k, v in data.items():
-                        self._data.append(k, v)
-                else:
-                    self._data = data
+		if data:
+			if method == "GET":
+				url += "?" + _urlencode(data)
+			else:
+				if is_pyodide_context():
+					self._data = FormData.new()
+					for k, v in data.items():
+						for val in self.to_form_value(k,v):
+							self._data.append(val[0], val[1])
 
-        self._headers = headers
-        self._url = url
-        self._response = None
+				else:
+					self._data = data
 
-    async def perform(self):
-        if is_pyodide_context():
-            options = {"method": self._method}
+		self._headers = headers
+		self._url = url
+		self._response = None
 
-            if self._headers:
-                options.update({"headers": to_js(self._headers)})
-            
-            if self._data:
-                options.update({"body": to_js(self._data)})
+	def flat(self, val):
+		res = []
+		for v in val:
+			if isinstance(v, list):
+				res.extend(self.flat(v))
+			else:
+				res.append(v)
+		return res
 
-            if self._credentials:
-                options.update({"credentials": 'include'})
+	def to_form_value(self, bone_name, val):
+		def to_form_value_intern(bone_name_intern, val_intern):
+			res = []
+			if isinstance(val_intern, list):
+				if any([isinstance(entry, dict) for entry in val_intern]):
+					for idx, entry in enumerate(val_intern):
+						res += to_form_value_intern(bone_name + "." + str(idx), entry)
+				else:
+					for v in val_intern:
+						res.append(to_form_value_intern(bone_name, v))
 
-            self._response = await fetch(self._url, **options)
-            self._status = self._response.status
-        else:
-            kwargs = {"headers":self._headers}
-            if self._method == "POST":
-                kwargs.update({"data": self._data})
-                        
-            try:
-                if self._credentials:
-                    kwargs.update({"cookies": self.COOKIES})
-            except AttributeError:
-                Logging.error("You need to set an cookie.")
+			elif isinstance(val_intern, dict):
+				for k, v in val_intern.items():
+					if bone_name_intern:
+						res.append(to_form_value_intern(f"{bone_name_intern}.{k}", v))
+					else:
+						res.append(to_form_value_intern(k, v))
+			else:
+				if val_intern is None:
+					val_intern = ""
+				if bone_name_intern:
+					res.append((bone_name, val_intern))
 
-            self._response = requests.request(self._method, self._url, **kwargs)
-            self._status = self._response.status_code
-    
-    async def json(self):
-        if not self._response:
-            return None
+			return res
 
-        if is_pyodide_context():
-            _text = await self._response.text()
-            try:
-                ret = json.loads(_text)
-            except:
-                #Logging.error(traceback.format_exc())
-                ret = _text
-            return ret
+		return self.flat(to_form_value_intern(bone_name, val))
 
-        return self._response.json()
+	async def perform(self):
+		if is_pyodide_context():
+			options = {"method": self._method}
 
-    async def text(self):
-        if is_pyodide_context():
-            return await self._response.text()
-        
-        return self._response.text
+			if self._headers:
+				options.update({"headers": to_js(self._headers)})
 
-    async def blob(self):
-        if is_pyodide_context():
-            return await self._response.blob()
-        
-        return self._response.content
+			if self._data:
+				options.update({"body": to_js(self._data)})
 
-    @staticmethod
-    async def get(*args, **kwargs):
-        _request = Request("GET", *args, **kwargs)
-        await _request.perform()
-        return _request
+			if self._credentials:
+				options.update({"credentials": 'include'})
 
+			self._response = await fetch(self._url, **options)
+			self._status = self._response.status
+		else:
+			kwargs = {"headers": self._headers}
+			if self._method == "POST":
+				kwargs.update({"data": self._data})
 
-    @staticmethod
-    async def post(*args, **kwargs):
-        _request = Request("POST", *args, **kwargs)
-        await _request.perform()
+			try:
+				if self._credentials:
+					kwargs.update({"cookies": self.COOKIES})
+			except AttributeError:
+				Logging.error("You need to set an cookie.")
 
-        return _request
+			self._response = requests.request(self._method, self._url, **kwargs)
+			self._status = self._response.status_code
 
-    @staticmethod
-    async def put(*args, **kwargs):
-        _request = Request("PUT", *args, **kwargs)
-        await _request.perform()
+	async def json(self):
+		if not self._response:
+			return None
 
-        return _request
+		if is_pyodide_context():
+			_text = await self._response.text()
+			try:
+				ret = json.loads(_text)
+			except:
+				# Logging.error(traceback.format_exc())
+				ret = _text
+			return ret
 
-    @staticmethod
-    async def delete(*args, **kwargs):
-        _request = Request("DELETE", *args, **kwargs)
-        await _request.perform()
+		return self._response.json()
 
-        return _request
+	async def text(self):
+		if is_pyodide_context():
+			return await self._response.text()
 
-    @staticmethod
-    async def patch(*args, **kwargs):
-        _request = Request("PATCH", *args, **kwargs)
-        await _request.perform()
+		return self._response.text
 
-        return _request
+	async def blob(self):
+		if is_pyodide_context():
+			return await self._response.blob()
+
+		return self._response.content
+
+	@staticmethod
+	async def get(*args, **kwargs):
+		_request = Request("GET", *args, **kwargs)
+		await _request.perform()
+		return _request
+
+	@staticmethod
+	async def post(*args, **kwargs):
+		_request = Request("POST", *args, **kwargs)
+		await _request.perform()
+
+		return _request
+
+	@staticmethod
+	async def put(*args, **kwargs):
+		_request = Request("PUT", *args, **kwargs)
+		await _request.perform()
+
+		return _request
+
+	@staticmethod
+	async def delete(*args, **kwargs):
+		_request = Request("DELETE", *args, **kwargs)
+		await _request.perform()
+
+		return _request
+
+	@staticmethod
+	async def patch(*args, **kwargs):
+		_request = Request("PATCH", *args, **kwargs)
+		await _request.perform()
+
+		return _request

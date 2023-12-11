@@ -34,7 +34,8 @@ exclude = [
   "/docs",
   "/tests",
 ]
-
+[tool.hatch.build.targets.wheel]
+packages = ["viur"]
 [project.urls]
 "Homepage" = "https://github.com/viur-framework/viur-scriptor-api"
 "Bug Tracker" = "https://github.com/viur-framework/viur-scriptor-api/issues"
