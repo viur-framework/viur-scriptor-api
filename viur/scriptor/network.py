@@ -20,7 +20,8 @@ import traceback
 class Request:
     COOKIES = {}
 
-    def __init__(self, method: str, url: str, credentials: bool = False, headers: dict = None, data: dict = None) -> None:
+    def __init__(self, method: str, url: str, credentials: bool = False, headers: dict = None,
+                 data: dict = None) -> None:
         self._status = None
         self._result = None
 
@@ -49,7 +50,7 @@ class Request:
 
             if self._headers:
                 options.update({"headers": to_js(self._headers)})
-            
+
             if self._data:
                 options.update({"body": to_js(self._data)})
 
@@ -59,10 +60,10 @@ class Request:
             self._response = await fetch(self._url, **options)
             self._status = self._response.status
         else:
-            kwargs = {"headers":self._headers}
+            kwargs = {"headers": self._headers}
             if self._method == "POST":
                 kwargs.update({"data": self._data})
-                        
+
             try:
                 if self._credentials:
                     kwargs.update({"cookies": self.COOKIES})
@@ -71,7 +72,7 @@ class Request:
 
             self._response = requests.request(self._method, self._url, **kwargs)
             self._status = self._response.status_code
-    
+
     async def json(self):
         if not self._response:
             return None
@@ -81,7 +82,7 @@ class Request:
             try:
                 ret = json.loads(_text)
             except:
-                #Logging.error(traceback.format_exc())
+                # Logging.error(traceback.format_exc())
                 ret = _text
             return ret
 
@@ -90,13 +91,13 @@ class Request:
     async def text(self):
         if is_pyodide_context():
             return await self._response.text()
-        
+
         return self._response.text
 
     async def blob(self):
         if is_pyodide_context():
             return await self._response.blob()
-        
+
         return self._response.content
 
     @staticmethod
@@ -104,7 +105,6 @@ class Request:
         _request = Request("GET", *args, **kwargs)
         await _request.perform()
         return _request
-
 
     @staticmethod
     async def post(*args, **kwargs):
