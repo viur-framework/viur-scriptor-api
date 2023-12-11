@@ -34,38 +34,52 @@ class Request:
 			else:
 				if is_pyodide_context():
 					self._data = FormData.new()
-					r_data=[]
 					for k, v in data.items():
-						self.rewrite(v,k)
-					for k, v in data.items():
-						self._data.append(k, v)
+						for val in self.to_form_value(k,v):
+							self._data.append(val[0], val[1])
+
 				else:
 					self._data = data
 
 		self._headers = headers
 		self._url = url
 		self._response = None
-	def rewrite(self,val,bone_name):
-		def rewrite_intern(val_intern,bone_name_intern):
-			r =[]
-			if isinstance(val_intern,list):
-				for v in val_intern:
-					r.append(rewrite_intern(v,bone_name))
-			elif isinstance(val_intern,dict):
-				for k,v in val_intern.items():
-					if bone_name_intern:
-						r.append(rewrite_intern(v,f"{bone_name_intern}.{k}"))
-					else:
-						r.append(rewrite_intern(v,k))
+
+	def flat(self, val):
+		res = []
+		for v in val:
+			if isinstance(v, list):
+				res.extend(self.flat(v))
 			else:
+				res.append(v)
+		return res
+
+	def to_form_value(self, bone_name, val):
+		def to_form_value_intern(bone_name_intern, val_intern):
+			res = []
+			if isinstance(val_intern, list):
+				if any([isinstance(entry, dict) for entry in val_intern]):
+					for idx, entry in enumerate(val_intern):
+						res += to_form_value_intern(bone_name + "." + str(idx), entry)
+				else:
+					for v in val_intern:
+						res.append(to_form_value_intern(bone_name, v))
+
+			elif isinstance(val_intern, dict):
+				for k, v in val_intern.items():
+					if bone_name_intern:
+						res.append(to_form_value_intern(f"{bone_name_intern}.{k}", v))
+					else:
+						res.append(to_form_value_intern(k, v))
+			else:
+				if val_intern is None:
+					val_intern = ""
 				if bone_name_intern:
-					r.append({bone_name:val_intern})
+					res.append((bone_name, val_intern))
 
-			return r
-		a = rewrite_intern(val,bone_name)
-		logging.debug(f"{val=},{bone_name=} ,{type(val)=}")
-		logging.debug(f"{a=}")
+			return res
 
+		return self.flat(to_form_value_intern(bone_name, val))
 
 	async def perform(self):
 		if is_pyodide_context():
