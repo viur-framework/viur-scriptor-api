@@ -70,13 +70,13 @@ async def confirm(text: str, *, title: str = "Confirm", allow_cancel: bool = Fal
     return ret
 
 
-async def input(text: str, *, title: str = "Input", type: str = "input", use_time: bool = False, empty: bool = False, image: str = "") -> datetime.datetime|str|float|int:
+async def input(text: str, *, title: str = "Input", type: str = "input", use_time: bool = False, empty: bool = False, image: str = "", placeholder: str = "") -> datetime.datetime|str|float|int:
     """
     Provide a dialog asking for some value.
     """
 
     if is_pyodide_context():
-        _self.postMessage(type="input", title=title, text=text, input_type=type, use_time=use_time, empty=empty, image=image)
+        _self.postMessage(type="input", title=title, text=text, input_type=type, use_time=use_time, empty=empty, image=image, placeholder=placeholder)
         await wait()
         tmp = manager.copyResult()
         manager.reset()
