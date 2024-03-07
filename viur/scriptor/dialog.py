@@ -172,7 +172,7 @@ async def select(text: str, choices: tuple[str] | list[str] | dict[str, str], *,
             choices = {str(k): {"text": str(k.get("text", "")), "image": str(k.get("image", "")) } for k in choices}
         else:
             choices = {str(k): str(k) for k in choices}
- 
+
     if not isinstance(choices, dict):
         raise ValueError("'choices' must be either a list or a dict.")
 
@@ -242,7 +242,7 @@ async def table(header: list[str], rows: list[list[str]], *, select=False, multi
         _self.postMessage(type="table", header=header, rows=rows, select=select, multiple=multiple, image=image)
 
         await wait()
-        
+
         ret = manager.resultValue.to_py()
         ret = [rows[idx] for idx in ret]
 
