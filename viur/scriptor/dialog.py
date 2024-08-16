@@ -1,300 +1,507 @@
-"""
-Dialogs API.
-
-This module provides several dialogs to be used for several user-interactions.
-
-- alert: Show a modal message to be confirmed
-- confirm: Show a Yes-No or Yes-No-Cancel dialog
-- input: Input dialog with various types
-- select: Select choice of several options, with multi-selection option.
-"""
-
-from .utils import is_pyodide_context
+import datetime
+import os
+from ._utils import is_pyodide_context
+import json
 
 if is_pyodide_context():
-    import js, pyodide
-    from js import self as _self
-    import manager
+    import pyodide
+    import js
+    from ._utils import _wait_for_result, bytes_to_blob
+
 else:
-    import asyncio
-    import click
-    import json
-    _input = input
+    import prompt_toolkit
+    from prompt_toolkit.completion import PathCompleter, FuzzyCompleter
+    from prompt_toolkit.validation import Validator, ValidationError
+    from simple_term_menu import TerminalMenu
+from . import file as _file
 
-import time
-import datetime
-import math
+_python_print = print
 
+if not is_pyodide_context():
+    class _FileExistsValidator(Validator):
 
-async def wait():
-    if is_pyodide_context():
-        while manager.resultValue is None:
-            await manager.sleep(250)
-    else:
-        await asyncio.sleep(250)
-
-async def alert(text: str, image: str = "") -> None:
-    """
-    Provide a message and stop program execution until accepted.
-    """
-    if is_pyodide_context():
-        _self.postMessage(type="alert", text=text, image=image)
-        await wait()
-        manager.reset()
-        manager.resultValue = None
-    else:
-        click.pause("Press any key to continue")
+        def validate(self, document):
+            text = document.text
+            if not text.strip():
+                raise ValidationError(message="Bitte geben sie einen Dateinamen ein.")
+            if not os.path.exists(text):
+                raise ValidationError(message="Eine Datei mit diesem Namen existiert nicht.")
 
 
-async def confirm(text: str, *, title: str = "Confirm", allow_cancel: bool = False, image: str = "") -> bool | None:
-    """
-    Provide a Yes-No or Yes-No-Cancel-dialog.
-    """
-    if is_pyodide_context():
-        _self.postMessage(type="confirm", title=title, text=text, cancel=allow_cancel, image=image)
-        await wait()
-        ret = manager.copyResult()
-        manager.reset()
-        manager.resultValue = None
-
-        if ret < 0:
-            return None
-        elif ret == 0:
-            return False
-
-        ret = True
-
-    else:
-        ret = click.confirm(text, abort=allow_cancel)
-
-    return ret
+    class _FileDoesntExistsOrShouldBeReplacedValidator(Validator):
+        def validate(self, document):
+            text = document.text
+            if not text.strip():
+                raise ValidationError(message="Bitte geben sie einen Dateinamen ein.")
+            if os.path.exists(text) and not text.endswith('!'):
+                raise ValidationError(
+                    message="This file already exists. If you want to replace it, add an exclamation-mark (!) at the end.")
 
 
-async def input(text: str, *, title: str = "Input", type: str = "input", use_time: bool = False, empty: bool = False, image: str = "", placeholder: str = "") -> datetime.datetime|str|float|int:
-    """
-    Provide a dialog asking for some value.
-    """
+    class _ConvertableValidator(Validator):
+        def __init__(self, conversion_function, error_message=None):
+            super().__init__()
+            self._conversion_function = conversion_function
+            self._errormessage = error_message
 
-    if is_pyodide_context():
-        _self.postMessage(type="input", title=title, text=text, input_type=type, use_time=use_time, empty=empty, image=image, placeholder=placeholder)
-        await wait()
-        tmp = manager.copyResult()
-        manager.reset()
-        manager.resultValue = None
-
-        if type == "date":
-            return datetime.datetime.fromtimestamp(math.floor(tmp/1000.0))
-
-        return tmp
-    else:
-        # click.echo(title)  # not required
-        ret = click.prompt(text)
-        if type == "date":
-            def validate_date(date_text):
-                try:
-                    return datetime.date.fromisoformat(date_text)
-                except ValueError:
-                    click.echo("Incorrect data format, should be YYYY-MM-DD")
-
-
-                return None
-
-            def validate_datetime(date_text):
-                try:
-                    return datetime.datetime.fromisoformat(date_text)
-                except ValueError:
-                    click.echo("Incorrect data format, should be YYYY-MM-DD HH:MM:SS")
-
-                return None
-
-            if use_time:
-                while not validate_date(ret):
-                    ret = click.prompt(text)
-            else:
-                while not validate_datetime(ret):
-                    ret = click.prompt(text)
-
-            return ret
-        elif type == "number":
-            def check_number(value: str):
-                try:
-                    r = float(value.replace("," "."))
-                    return ret
-                except:
-                    try:
-                        r = int(value)
-                        return r
-                    except:
-                        return None
-                return None
-            while True:
-                ret = check_number(ret)
-                if ret is None:
-                    click.echo("Enter a valid number.")
-                    ret = click.prompt(text)
-                else:
-                    break
-
-            return ret
-        else:
-            return ret
-
-async def input_date(*args, **kwargs) -> datetime.datetime:
-    """
-        Provide a input asking for datetime value.
-    """
-    kwargs |= {"type": "date"}
-    return await input(*args, **kwargs)
-
-async def input_number(*args, **kwargs) -> int|float:
-    kwargs |= {"type": "number"}
-    return await input(*args, **kwargs)
-
-async def input_string(*args, **kwargs) -> str:
-    kwargs |= {"type": "string"}
-    return await input(*args, **kwargs)
-
-async def input_text(*args, **kwargs) -> str:
-    kwargs |= {"type": "text"}
-    return await input(*args, **kwargs)
-
-input.date = input_date
-input.number = input_number
-input.text = input_text
-input.string = input_string
-
-
-async def select(text: str, choices: tuple[str] | list[str] | dict[str, str], *,
-                 title: str = "Select", multiple: bool = False, image: str = "") -> str|list[str]:
-    if isinstance(choices, (list, tuple)):
-        if all([isinstance(k, (dict)) for k in choices]):
-            # Image Mode
-            choices = {str(k): {"text": str(k.get("text", "")), "image": str(k.get("image", "")) } for k in choices}
-        else:
-            choices = {str(k): str(k) for k in choices}
-
-    if not isinstance(choices, dict):
-        raise ValueError("'choices' must be either a list or a dict.")
-
-    # Browser-mode
-    if is_pyodide_context():
-        choices = pyodide.ffi.to_js(choices, dict_converter=js.Object.fromEntries)
-
-        _self.postMessage(type="select", title=title, text=text, choices=choices, multiple=multiple, image=image)
-        await wait()
-
-        ret = manager.resultValue
-        if multiple:
-            ret = ret.to_py()
-
-        manager.reset()
-        manager.resultValue = None
-
-        return ret
-
-    # CLI-mode
-    maxkey = max([len(k) for k in choices])
-    menu = [f"{k: <{maxkey}} - {v}" if k != v else str(v) for k, v in choices.items()]
-
-    if not multiple:
-        ret = click.prompt(
-            "\n".join(menu) + "\n" + text,
-            type=click.Choice(list(choices.keys()))
-        )
-    else:
-        options = list(choices.keys())
-
-        while True:
-            ret = click.prompt("\n".join(menu) + "\n" + text + f" ({', '.join(options)})", type=str)
-            ret = [c.strip() for c in ret.split(",")]
-            if all([v in options for v in ret]):
-                break
-
-            click.echo(f"Invalid input entered. Allowed values: {options}")
-
-    return ret
-
-async def diffcmp(title: str, changes: list[list[str]], image: str = "") -> None:
-    if is_pyodide_context():
-        for i in range(len(changes)):
-            changes[i] = pyodide.ffi.to_js(changes[i])
-
-        _self.postMessage(type="diffcmp", title=title, changes=pyodide.ffi.to_js(changes), image=image)
-    else:
-        click.echo(title)
-
-        for entry in changes:
-            for i in range(len(entry)):
-                if not isinstance(entry[i], str):
-                    entry[i] = str(entry[i])
-
-        ret = "\n".join([f"{e[0]}\t\t\t{e[1]} -> {e[2]}" for e in changes])
-        click.echo(ret)
-
-async def table(header: list[str], rows: list[list[str]], *, select=False, multiple=False, image: str = "") -> str|list[str]|None:
-    if is_pyodide_context():
-        for i in range(len(rows)):
-            rows[i] = pyodide.ffi.to_js(rows[i])
-
-        header = pyodide.ffi.to_js(header)
-        rows = pyodide.ffi.to_js(rows)
-
-        _self.postMessage(type="table", header=header, rows=rows, select=select, multiple=multiple, image=image)
-
-        await wait()
-
-        ret = manager.resultValue.to_py()
-        ret = [rows[idx] for idx in ret]
-
-        if not multiple:
-            ret = ret[0] if ret else None
-
-        manager.reset()
-        manager.resultValue = None
-
-        return ret
-
-    column_widths = [max(len(header[i]), max(len(str(row[i])) for row in rows)) for i in range(len(header))]
-    separator = "+".join(["-" * (width + 2) for width in column_widths])
-
-    print(separator)
-    print("|", end="")
-    for i in range(len(header)):
-        print(f" {header[i]:^{column_widths[i]}} |", end="")
-    print("\n" + separator)
-
-    for i in range(len(rows)):
-        print("|", end="")
-        for j in range(len(header)):
-            print(f" {rows[i][j]:^{column_widths[j]}} |", end="")
-        print("\n" + separator)
-
-    if select:
-        while True:
-            if multiple:
-                selected = _input("Select a multiple (example: [0, 1, 2] ...) ")
-            else:
-                selected = _input("Select a row (example: 1, 2, ...) ")
+        def validate(self, document):
+            text = document.text
             try:
-                if not multiple:
-                    selected = int(selected)
-                    if 0 <= selected < len(rows):
-                        return rows[selected]
-                    else:
-                        print("Wrong input, try it again.")
+                self._conversion_function(text)
+            except Exception:
+                if self._errormessage is None:
+                    errormessage = "Das Format stimmt nicht."
                 else:
-                    selected = json.loads(selected)
-                    if isinstance(selected, int):
-                        if 0 <= selected < len(rows):
-                            return rows[selected]
-                    if not isinstance(selected, list):
-                        print("Wrong input, try it again.")
-                    else:
-                        if any([not isinstance(e, int) for e in selected]):
-                            print("Wrong input, try it again.")
-                            continue
-                        return [rows[e] for e in selected if e >= 0 and e < len(rows)]
-            except ValueError:
-                print("Wrong Input.")
+                    errormessage = self._errormessage
+                raise ValidationError(message=errormessage)
 
-    return None
+
+    class _StringNotEmptyValidator(Validator):
+        def validate(self, document):
+            if not document.text:
+                raise ValidationError(message="You need to enter text. An empty string is not allowed.")
+
+
+class Dialog:
+    if is_pyodide_context():
+        @staticmethod
+        def print(*args, sep=' ', end='\n', file=None, flush=False):
+            """
+            displays Text
+
+            :param args: ``string`` / ``object``\\ s that should be displayed.
+            :param sep: ``string`` inserted between values, default a space.
+            :param end: ``string`` appended after the last value, default a newline. ignored in browser.
+            :param file: a file-like object (stream); defaults to the current sys.stdout. ignored in browser.
+            :param flush: whether to forcibly flush the stream. ignored in browser.
+            """
+            js.self.postMessage(type="log", text=sep.join(str(t) for t in args), level="info")
+    else:
+        @staticmethod
+        def print(*args, sep=' ', end='\n', file=None, flush=False):
+            """
+            displays Text
+
+            :param args: ``string`` / ``object``\\ s that should be displayed.
+            :param sep: `string` inserted between values, default a space.
+            :param end: `string` appended after the last value, default a newline. ignored in browser.
+            :param file: a file-like object (stream); defaults to the current sys.stdout. ignored in browser.
+            :param flush: whether to forcibly flush the stream. ignored in browser.
+            """
+            _python_print(*args, sep=sep, end=end, file=file, flush=flush)
+
+    if is_pyodide_context():
+        @staticmethod
+        async def alert(text: str, image=None):
+            """
+            Shows a message to the user and blocks until it is confirmed.
+
+            :param text: The message to be displayed
+            :param image: displays an image in the alert-box
+            """
+            js.self.postMessage(type="alert", text=text, image=image)
+            await _wait_for_result()
+    else:
+        @staticmethod
+        async def alert(text: str, image=None):
+            """
+            Shows a message to the user and blocks until it is confirmed.
+
+            :param text: The message to be displayed
+            :param image: displays an image in the alert-box
+            """
+            print(text)
+            if image:
+                print(f"In the Browser, an image would have been shown here: {image}")
+            input("Please press <Enter> to continue...")
+
+    if is_pyodide_context():
+        @staticmethod
+        async def _open_file_dialog(prompt=None):
+            js.self.postMessage(type="showOpenFilePicker")
+            res = await _wait_for_result()
+            if res == -1:
+                raise RuntimeError("The user has cancelled the dialog.")
+            file = await res[0].getFile()
+            bytes = (await file.arrayBuffer()).to_bytes()
+            return _file.File.from_bytes(data=bytes, filename=file.name)
+    else:
+        @staticmethod
+        async def _open_file_dialog(prompt=None):
+            if prompt is None:
+                prompt = "Bitte geben sie eine Datei zum öffnen an:"
+            prompt += ' '
+            filename = await prompt_toolkit.PromptSession().prompt_async(prompt,
+                                                                         completer=FuzzyCompleter(PathCompleter()),
+                                                                         complete_while_typing=True,
+                                                                         validator=_FileExistsValidator())
+            with open(filename, 'rb') as fin:
+                data = fin.read()
+            return _file.File(data=data, filename=filename)
+
+    if is_pyodide_context():
+        @staticmethod
+        async def _save_file_dialog(data, prompt):
+            assert isinstance(data, (str, bytes)), "data must be of type str or bytes"
+            js.self.postMessage(type="showSaveFilePicker")
+            res = await _wait_for_result()
+            if res == -1:
+                raise RuntimeError("The user has cancelled the dialog.")
+            w = await res.createWritable()
+            if isinstance(data, str):
+                await w.write(data)
+            elif isinstance(data, bytes):
+                await w.write(bytes_to_blob(data))
+            await w.close()
+
+    else:
+        @staticmethod
+        async def _save_file_dialog(data, prompt):
+            validator = _FileDoesntExistsOrShouldBeReplacedValidator()
+            filename = await prompt_toolkit.PromptSession().prompt_async(prompt,
+                                                                         completer=FuzzyCompleter(PathCompleter()),
+                                                                         complete_while_typing=True,
+                                                                         validator=validator)
+            if filename.endswith('!'):
+                filename = filename[:-1]
+            if isinstance(data, str):
+                with open(filename, 'w') as fout:
+                    fout.write(data)
+            elif isinstance(data, bytes):
+                with open(filename, 'wb') as fout:
+                    fout.write(data)
+            else:
+                raise ValueError('Nur Strings und Bytestrings können gespeichert werden.')
+
+    if is_pyodide_context():
+        @staticmethod
+        async def select(options: dict[str, str] | list[str] | tuple[str], title: str = None, text: str = None,
+                         multiselect: bool = False, image=None):
+            """
+            Gives the user a choice between different options.
+            If multiselect is False, only one selection is allowed, otherwise the user can select multiple options.
+
+            :param options: the selectable options
+            :param multiselect: if True, multiple options can be selected, otherwise only one
+            :param image: displays an image in the select-box
+            :return: a ``tuple`` of the selected options
+            """
+            if isinstance(options, dict):
+                assert all(i is not None for i in options.values()), "No value of a choices-dict may be None."
+                choices = options
+            elif isinstance(options, (list, tuple)):
+                choices = {i: i for i in options if
+                           i is not None}
+            title = title or "Select"
+            text = text or ("Please select any options:" if multiselect else "Please select an option:")
+            js.self.postMessage(
+                type="select",
+                title=title,
+                text=text,
+                choices=pyodide.ffi.to_js(choices, dict_converter=js.Object.fromEntries),
+                multiple=multiselect,
+                image=image
+            )
+            if multiselect:
+                return [choices[i] for i in (await _wait_for_result())]
+            else:
+                return choices[await _wait_for_result()]
+    else:
+        @staticmethod
+        async def select(options: dict[str, str] | list[str] | tuple[str], title: str = None, text: str = None,
+                         multiselect: bool = False, image=None):
+            """
+            Gives the user a choice between different options.
+            If multiselect is False, only one selection is allowed, otherwise the user can select multiple options.
+
+            :param options: the selectable options
+            :param multiselect: if True, multiple options can be selected, otherwise only one
+            :param image: displays an image in the select-box
+            :return: a ``tuple`` of the selected options
+            """
+            assert isinstance(options, dict)
+            keys = list(options.keys())
+            title = title or "Select"
+            text = text or ("Please select any options:" if multiselect else "Please select an option:")
+            print(title)
+            print(text)
+            if image:
+                print(f"In the Browser, an image would have been shown here: {image}")
+            terminal_menu = TerminalMenu(
+                keys,
+                multi_select=multiselect,
+                show_multi_select_hint=multiselect,
+                search_key=False if multiselect else None  # disable search on multiselect
+            )
+            menu_entry_index = terminal_menu.show()
+            print(f"""{menu_entry_index = }""")
+            if multiselect:
+                return [options[keys[selection]] for selection in menu_entry_index]
+            else:
+                return options[keys[menu_entry_index]]
+
+    @staticmethod
+    async def confirm(text: str = None, title: str = None, yes: str = "Yes", no: str = "No"):
+        """
+        Asks the user to answer a Yes/No Question
+
+        :param yes: (optional) the word for 'yes'
+        :param no: (optinoal) the word for 'no'
+        :return:
+        """
+        title = title or "Confirm"
+        text = text or "OK?"
+        return await Dialog.select(options={yes: yes, no: no}, title=title, text=text) == yes
+
+    if is_pyodide_context():
+        @staticmethod
+        async def text(prompt: str = None, title: str = "Text Input", empty: bool = None, placeholder: str = None,
+                       image=None, multiline=False):
+            """
+            prompts the user to enter text
+
+            :param prompt: the prompt the user will be shown
+            :param title: the title of the textbox
+            :param empty: allow the empty ``string`` as a valid result
+            :param image: displays an image in the text-box
+            :param placeholder: the placehodler-text to be displayed in the textbox while it is empty
+            :param multiline: enables multiline-input
+            :return: the text entered by the user
+            """
+            kwargs = {
+                "type": "input",
+                "title": title,
+                "text": prompt,
+                "empty": empty,
+                "image": image,
+                "placeholder": placeholder,
+            }
+            if multiline:
+                kwargs["input_type"] = "text"
+            js.self.postMessage(**kwargs)
+            return await _wait_for_result()
+    else:
+        @staticmethod
+        async def text(prompt: str = None, title: str = "Text Input", empty: bool = None, placeholder: str = None,
+                       image=None, multiline=False):
+            """
+            prompts the user to enter text
+
+            :param prompt: the prompt the user will be shown
+            :param title: the title of the textbox
+            :param empty: allow the empty ``string`` as a valid result
+            :param image: displays an image in the text-box
+            :param placeholder: the placehodler-text to be displayed in the textbox while it is empty
+            :param multiline: enables multiline-input
+            :return: the text entered by the user
+            """
+            if title:
+                print(title)
+            if image:
+                print(f"In the Browser, an image would have been shown here: {image}")
+            if prompt is None:
+                prompt = "Bitte geben sie Text ein:"
+            if multiline:
+                print("press [Esc] and then [Enter] to finish...")
+            return await prompt_toolkit.PromptSession().prompt_async(
+                prompt,
+                placeholder=placeholder,
+                validator=None if empty else _StringNotEmptyValidator(),
+                multiline=multiline
+            )
+
+    if is_pyodide_context():
+        @staticmethod
+        async def number(prompt: str = None, title: str = "Number Input", image=None):
+            """
+            prompts the user to input a number
+
+            :param prompt: the prompt the user will be shown
+            :param title: the title of the textbox
+            :param number_type: the type of expected number
+            :param image: displays an image in the number-box
+            :return: the number the user endered
+            """
+            js.self.postMessage(
+                type="input",
+                title=title,
+                text=prompt,
+                input_type='number',
+                image=image
+            )
+            return await _wait_for_result()
+    else:
+        @staticmethod
+        async def number(prompt: str = None, title: str = "Number Input", image=None):
+            """
+            prompts the user to input a number
+
+            :param prompt: the prompt the user will be shown
+            :param title: the title of the textbox
+            :param number_type: the type of expected number
+            :param image: displays an image in the number-box
+            :return: the number the user endered
+            """
+            if title:
+                print(title)
+            if image:
+                print(f"In the Browser, an image would have been shown here: {image}")
+            if prompt is None:
+                prompt = "Bitte geben eine Zahl ein:"
+            validator = _ConvertableValidator(conversion_function=float, error_message="Bitte geben sie eine Zahl ein.")
+            res = await prompt_toolkit.PromptSession().prompt_async(prompt, validator=validator)
+            try:
+                return int(res)
+            except ValueError:
+                return float(res)
+
+    if is_pyodide_context():
+        @staticmethod
+        async def date(prompt: str = None, use_time: bool = False, image=None):
+            """
+            prompts the user to input a date
+
+            :param prompt: the prompt the user will be shown
+            :param use_time: also input time in addition to the date
+            :param image: displays an image in the date-box
+            :return: the date entered by the user
+            """
+            js.self.postMessage(
+                type="input",
+                title="Date input",
+                text=prompt,
+                input_type="date",
+                use_time=use_time,
+                image=image
+            )
+            timestamp = await _wait_for_result()
+            if use_time:
+                res = datetime.datetime.fromtimestamp(timestamp / 1000, tz=datetime.timezone.utc).replace(tzinfo=None)
+            else:
+                res = datetime.date.fromtimestamp(timestamp / 1000)
+            return res
+    else:
+        @staticmethod
+        async def date(prompt: str = None, use_time: bool = False, image=None):
+            """
+            prompts the user to input a date
+
+            :param prompt: the prompt the user will be shown
+            :param use_time: also input time in addition to the date
+            :param image: displays an image in the date-box
+            :return: the date entered by the user
+            """
+            if image:
+                print(f"In the Browser, an image would have been shown here: {image}")
+            if prompt is None:
+                prompt = "Bitte geben sie ein Datum ein:"
+            validator = _ConvertableValidator(
+                conversion_function=datetime.datetime.fromisoformat,
+                error_message="Bitte geben sie ein gütliges Datum ein."
+            )
+            entered_date = await prompt_toolkit.PromptSession().prompt_async(prompt, validator=validator)
+            res = datetime.datetime.fromisoformat(entered_date)
+            if not use_time:
+                res = datetime.date.fromtimestamp(res.timestamp())
+            return res
+
+    if is_pyodide_context():
+        @staticmethod
+        async def show_diff(title: str, diffs: list[tuple[str, str, str]], image=None):
+            """
+            shows a diff-view to the user
+
+            :param title: the title of the box
+            :param diffs: the data to be shown
+            :param image: displays an image in the diff-box
+            """
+            js.self.postMessage(type="diffcmp", title=title, changes=pyodide.ffi.to_js(diffs), image=image)
+    else:
+        @staticmethod
+        async def show_diff(title: str, diffs: list[tuple[str, str, str]], image=None):
+            """
+            shows a diff-view to the user
+
+            :param title: the title of the box
+            :param diffs: the data to be shown
+            :param image: displays an image in the diff-box
+            """
+            print(title)
+            if image:
+                print(f"In the Browser, an image would have been shown here: {image}")
+            print('=' * len(title))
+            for key, old, new in diffs:
+                print(f"""{key}: {old} -> {new}""")
+            print('')
+
+    if is_pyodide_context():
+        @staticmethod
+        async def table(header: list[str], rows: list[list[str]], select: bool = None, multiselect: bool = None,
+                        image=None):
+            """
+            displays a table
+
+            :param header: the header of the table
+            :param rows: the data of the tabel
+            :param select: if True, the user can select a row
+            :param multiselect: if True and select is True, the user can select multiple rows
+            :param image: displays an image in the table-box
+            :return: list of indices of selected items (if select is True)
+            """
+            assert not (multiselect is True and select is False), "You can't multiselect with disabled selection."
+            if multiselect:
+                select = True
+            header = pyodide.ffi.to_js(header)
+            rows = pyodide.ffi.to_js(rows)
+            js.self.postMessage(type="table", header=header, rows=rows, select=select, multiple=multiselect,
+                                image=image)
+            if select:
+                res = await _wait_for_result()
+                res = json.loads(f"[{res}]")
+                return res
+    else:
+        @staticmethod
+        async def table(header: list[str], rows: list[list[str]], select: bool = None, multiselect: bool = None,
+                        image=None):
+            """
+            displays a table
+
+            :param header: the header of the table
+            :param rows: the data of the tabel
+            :param select: if True, the user can select a row
+            :param multiselect: if True and select is True, the user can select multiple rows
+            :param image: displays an image in the table-box
+            :return: list of indices of selected items (if select is True)
+            """
+            assert not (multiselect is True and select is False), "You can't multiselect with disabled selection."
+            if multiselect:
+                select = True
+            if image:
+                print(f"In the Browser, an image would have been shown here: {image}")
+            if select:
+                header = [''] + header
+                rows = [[str(i)] + row for i, row in enumerate(rows)]
+            column_widths = [len(i) for i in header]
+            for row in rows:
+                for idx, col in enumerate(row):
+                    w = len(col)
+                    if column_widths[idx] < w:
+                        column_widths[idx] = w
+            separator = '|'.join('-' * (w + 2) for w in column_widths)
+            print('|'.join([' ' + c.ljust(column_widths[i] + 1) for i, c in enumerate(header)]))
+            print(separator)
+            num_rows = len(rows)
+            for row in rows:
+                print('|'.join([' ' + c.ljust(column_widths[i] + 1) for i, c in enumerate(row)]))
+            if multiselect:
+                selection = await Dialog.text("Your selections (comma-separated ints): ")
+                selection = json.loads(f"""[{selection}]""")
+                assert isinstance(selection, list), "You need to input a json-list."
+                assert all(isinstance(i, int) for i in selection), "All elements of the list must be ints."
+                assert all(i < num_rows for i in selection), "You selected an invalid row."
+                return selection
+            else:
+                selection = await Dialog.text("Your selection: ")
+                selection = json.loads(selection)
+                assert isinstance(selection, int)
+                return selection
