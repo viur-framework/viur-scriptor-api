@@ -258,7 +258,7 @@ error.
         print(content)
 
 
-as_object_form_json
+as_object_from_json
 ~~~~~~~~~~~~~~~~~~~
 If the file the user provided is a json-file, this method will convert it to a python-object.
 

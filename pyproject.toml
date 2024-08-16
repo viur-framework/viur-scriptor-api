@@ -4,29 +4,32 @@ build-backend = "hatchling.build"
 
 [project]
 name = "viur-scriptor-api"
-version = "0.0.3"
+version = "1.0.0"
 authors = [
-  { name="Cian", email="co@mausbrand.de" },
+  { name = "Mausbrand Informationssysteme GmbH", email = "devs@viur.dev" },
 ]
 description = "This is the internal Scriptor library that the viur-scriptor utilizes. The API includes components for networking as well as parts related to the Scriptor's files."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Topic :: Software Development :: Interpreters",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-  "click==8.1.7",
-  "requests==2.31.0"
+    "requests==2.31.0",
+    "openpyxl==3.1.5",
+    "prompt_toolkit==3.0.47",
+    "simple-term-menu==1.6.4",
+    "chardet==5.2.0",
+    "python-magic==0.4.27",
 ]
 
 [tool.flit.metadata]
 module = "viur.scriptor"
-
 
 [tool.hatch.build]
 exclude = [
@@ -34,8 +37,10 @@ exclude = [
   "/docs",
   "/tests",
 ]
+
 [tool.hatch.build.targets.wheel]
 packages = ["viur"]
+
 [project.urls]
 "Homepage" = "https://github.com/viur-framework/viur-scriptor-api"
 "Bug Tracker" = "https://github.com/viur-framework/viur-scriptor-api/issues"
