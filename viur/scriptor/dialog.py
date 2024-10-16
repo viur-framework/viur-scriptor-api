@@ -375,6 +375,13 @@ class Dialog:
                 image=image
             )
             timestamp = await _wait_for_result()
+            try:
+                if use_time:
+                    return datetime.datetime.fromisoformat(timestamp)
+                else:
+                    return datetime.date.fromisoformat(timestamp)
+            except ValueError:
+                pass
             if use_time:
                 res = datetime.datetime.fromtimestamp(timestamp / 1000, tz=datetime.timezone.utc).replace(tzinfo=None)
             else:

@@ -98,11 +98,17 @@ a reference to it, so ``close_all`` only needs to be called on the root-``Direct
     async def main():
         my_dir = await DirectoryHandler.open()
         subdir = await my_dir.get_subdirectory_handler("new_subdir", create=True)
-        await subdir.write_to_file(b"data", "filename.txt")
-        await my_dir.close_all()
+        try:
+            await subdir.write_to_file(b"data", "filename.txt")
+        except ValueError as ve:
+            print(ve)
+            return
+        finally:
+            await my_dir.close_all()
         print("Inside the directory you picked, there should now be a new"
               " subdirectory called new_subdir.")
         print("Inside it, you should find a file called filename.txt")
+
 
 
 read_from_file

@@ -67,8 +67,12 @@ records named "test" before and after the edit.
         example = await modules.get_module("example")
         test = await gather_async_iterator(example.list(params={"name": "test"}))
         print(f"""Number of records with name "test": {len(test)}""")
-        print(f"""The record we'll edit:\n{test[0]}""")
-        test_key = test[0]["key"]
+        try:
+            print(f"""The record we'll edit:\n{test[0]}""")
+            test_key = test[0]["key"]
+        except IndexError:
+            print("""Nothing to do, there are not records with the name "test" left.""")
+            return
         print(f"""Key of the record we'll edit: {test_key}""")
         await example.edit(key=test_key, params={"name": "test_edited"})
         test_after_edit = await gather_async_iterator(example.list(params={"name": "test"}))

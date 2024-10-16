@@ -63,6 +63,68 @@ continue or be stopped.
         print("Done!")
 
 
+Select
+------
+The ``select``-element is the generalized version of the ``confirm``-element. As the name suggests, you can prompt the
+user with a selection of elements you provide.
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        selections = ["Option A", "Option B", "Option C"]
+        ret = await Dialog.select(selections)
+        print(f"""you selected {ret}""")
+
+The return value will be the name of the selected element. Multiselect is also supported:
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        selections = ["Option A", "Option B", "Option C"]
+        ret = await Dialog.select(selections, multiselect=True)
+        print(f"""you selected {ret}""")
+
+
+The return-value will be a list of the selected elements. You can also specify the return-values for the different
+selections. This works with and without multiselect:
+
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        selections = {
+            "Option A": 1,
+            "Option B": 2,
+            "Option C": 3,
+        }
+        ret = await Dialog.select(selections)
+        print(f"""you selected {ret}""")
+
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        selections = {
+            "Option A": 1,
+            "Option B": 2,
+            "Option C": 3,
+        }
+        ret = await Dialog.select(selections, multiselect=True)
+        print(f"""you selected {ret}""")
+
+
 Data-input
 ----------
 Input-elements are used to get data from the user.
@@ -114,11 +176,10 @@ output type will be returned as ``int``.
         print(f"You are {age} years old.")
 
 
-
 Date
 ~~~~
 Often, documentation requires including information such as dates and times. To facilitate this, the Scriptor provides
-the ability to input date values. Unlike other input types, this returns a datetime object.
+the ability to input date values. Unlike other input types, this returns a ``date``- or ``datetime``-object.
 
 .. code-block:: python
 
@@ -129,8 +190,22 @@ the ability to input date values. Unlike other input types, this returns a datet
         date = await Dialog.date("When were you born?")
         print(f"You were born on {date}.")
 
-In this example, the ``date`` variable is of type ``datetime.datetime``. Therefore, you can utilize all the functions
-provided by the Python standard library's ``datetime``-module.
+
+In this example, the ``date`` variable is of type ``datetime.date``. Therefore, you can utilize all the functions
+provided by the Python standard library's ``datetime``-module. If you want the user to input a time as well, you need
+to use the ``use_time``-parameter:
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        date = await Dialog.date("When were you born?", use_time=True)
+        print(f"You were born on {date}.")
+
+This example will ask for a date and a time and therefor return a ``datetime.datetime``-object.
+
 
 Diff
 ----
