@@ -140,7 +140,6 @@ a way for users to enter and submit data.
     from viur.scriptor import *
 
     async def main():
-        # Ask the user if the program should proceed (interaction)
         ret = await Dialog.text("What's your name?")
 
         print("Your name is: "+ ret)
@@ -153,8 +152,25 @@ It's also possible to let the user input multiline-strings like this:
     from viur.scriptor import *
 
     async def main():
-        # Ask the user if the program should proceed (interaction)
         ret = await Dialog.text("What's your address?", multiline=True)
+
+        print("Your address is:\n"+ ret)
+
+
+Additionaly, there's an option to provide a default value to the user:
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        ret = await Dialog.text("What's your name?", default_value="Mausbrand")
+
+        print("Your name is: "+ ret)
+
+        ret = await Dialog.text("What's your address?", multiline=True,
+            default_value="Mausbrand Informationssysteme GmbH\nSpeicherstraße 33\n44147 Dortmund")
 
         print("Your address is:\n"+ ret)
 
@@ -173,6 +189,18 @@ output type will be returned as ``int``.
 
     async def main():
         age = await Dialog.number("How old are you?")
+        print(f"You are {age} years old.")
+
+
+As with ``text``, you can provide a default value:
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        age = await Dialog.number("How old are you?", default_value=20)
         print(f"You are {age} years old.")
 
 
@@ -206,6 +234,14 @@ to use the ``use_time``-parameter:
 
 This example will ask for a date and a time and therefor return a ``datetime.datetime``-object.
 
+| Similar to ``text`` and ``number``, there's an option for a default value. In this case, there are several
+  format-options:
+| The ``default_value`` can be a ``datetime.date``, a ``datetime.datetime`` or an ISO-format-date-string like
+  ``"2024-12-24"`` or ``"2024-12-24 23:59:59"``. The behaviour depends on if ``use_time`` is set to ``True`` or not.
+| If it is, ``datetime`` and an ISO-string with a time will work as expected, a ``date`` or an ISO-string without time
+  will produce a ``default_value`` on that date at midnight.
+| If it is not, ``date`` and an ISO-string without time will work as expected. If ``default_value`` is a ``datetime``
+  or an ISO-string with a time, the time is simply ignored.
 
 Diff
 ----
