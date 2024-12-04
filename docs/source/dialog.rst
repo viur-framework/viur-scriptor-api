@@ -234,6 +234,7 @@ to use the ``use_time``-parameter:
 
 This example will ask for a date and a time and therefor return a ``datetime.datetime``-object.
 
+
 | Similar to ``text`` and ``number``, there's an option for a default value. In this case, there are several
   format-options:
 | The ``default_value`` can be a ``datetime.date``, a ``datetime.datetime`` or an ISO-format-date-string like
@@ -242,6 +243,7 @@ This example will ask for a date and a time and therefor return a ``datetime.dat
   will produce a ``default_value`` on that date at midnight.
 | If it is not, ``date`` and an ISO-string without time will work as expected. If ``default_value`` is a ``datetime``
   or an ISO-string with a time, the time is simply ignored.
+
 
 Diff
 ----
