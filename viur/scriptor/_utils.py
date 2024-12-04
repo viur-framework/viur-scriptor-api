@@ -89,7 +89,7 @@ def normalize_table(table, header=None, fill_empty=False, auto_str=False):
         header_len = len(header)
         return [extend_list(row, header_len, '') for row in [header] + table]
     else:
-        raise ValueError(f"""Tabellen müssen vom Typ list[dict[str,str]] oder list[list[str]] sein.""")
+        raise ValueError(f"""Tables must be of type list[dict[str,str]] or list[list[str]].""")
 
 
 def table_dict_to_list_style_generator(data, header, fill_empty=False):

@@ -1,5 +1,8 @@
 import datetime
 import os
+import typing
+from email.policy import default
+
 from ._utils import is_pyodide_context
 import json
 
@@ -23,16 +26,16 @@ if not is_pyodide_context():
         def validate(self, document):
             text = document.text
             if not text.strip():
-                raise ValidationError(message="Bitte geben sie einen Dateinamen ein.")
+                raise ValidationError(message="Please enter a valid filename.")
             if not os.path.exists(text):
-                raise ValidationError(message="Eine Datei mit diesem Namen existiert nicht.")
+                raise ValidationError(message="A file with this name doesn't exist.")
 
 
     class _FileDoesntExistsOrShouldBeReplacedValidator(Validator):
         def validate(self, document):
             text = document.text
             if not text.strip():
-                raise ValidationError(message="Bitte geben sie einen Dateinamen ein.")
+                raise ValidationError(message="Please enter a filename.")
             if os.path.exists(text) and not text.endswith('!'):
                 raise ValidationError(
                     message="This file already exists. If you want to replace it, add an exclamation-mark (!) at the end.")
@@ -50,7 +53,7 @@ if not is_pyodide_context():
                 self._conversion_function(text)
             except Exception:
                 if self._errormessage is None:
-                    errormessage = "Das Format stimmt nicht."
+                    errormessage = "The format is not correct."
                 else:
                     errormessage = self._errormessage
                 raise ValidationError(message=errormessage)
@@ -129,7 +132,7 @@ class Dialog:
         @staticmethod
         async def _open_file_dialog(prompt=None):
             if prompt is None:
-                prompt = "Bitte geben sie eine Datei zum öffnen an:"
+                prompt = "Please enter a filename to open:"
             prompt += ' '
             filename = await prompt_toolkit.PromptSession().prompt_async(prompt,
                                                                          completer=FuzzyCompleter(PathCompleter()),
@@ -171,7 +174,7 @@ class Dialog:
                 with open(filename, 'wb') as fout:
                     fout.write(data)
             else:
-                raise ValueError('Nur Strings und Bytestrings können gespeichert werden.')
+                raise ValueError('Only strings and bytestrings can be saved.')
 
     if is_pyodide_context():
         @staticmethod
@@ -182,6 +185,8 @@ class Dialog:
             If multiselect is False, only one selection is allowed, otherwise the user can select multiple options.
 
             :param options: the selectable options
+            :param title: the title on top of the select-box
+            :param text: the text to be displayed
             :param multiselect: if True, multiple options can be selected, otherwise only one
             :param image: displays an image in the select-box
             :return: a ``tuple`` of the selected options
@@ -215,6 +220,8 @@ class Dialog:
             If multiselect is False, only one selection is allowed, otherwise the user can select multiple options.
 
             :param options: the selectable options
+            :param title: the title on top of the select-box
+            :param text: the text to be displayed
             :param multiselect: if True, multiple options can be selected, otherwise only one
             :param image: displays an image in the select-box
             :return: a ``tuple`` of the selected options
@@ -245,8 +252,10 @@ class Dialog:
         """
         Asks the user to answer a Yes/No Question
 
+        :param title: the title on top of the confirm-box
+        :param text: the text to be displayed
         :param yes: (optional) the word for 'yes'
-        :param no: (optinoal) the word for 'no'
+        :param no: (optional) the word for 'no'
         :return:
         """
         title = title or "Confirm"
@@ -256,7 +265,7 @@ class Dialog:
     if is_pyodide_context():
         @staticmethod
         async def text(prompt: str = None, title: str = "Text Input", empty: bool = None, placeholder: str = None,
-                       image=None, multiline=False):
+                       image=None, multiline=False, default_value: str = None):
             """
             prompts the user to enter text
 
@@ -264,8 +273,9 @@ class Dialog:
             :param title: the title of the textbox
             :param empty: allow the empty ``string`` as a valid result
             :param image: displays an image in the text-box
-            :param placeholder: the placehodler-text to be displayed in the textbox while it is empty
+            :param placeholder: the placeholder-text to be displayed in the textbox while it is empty
             :param multiline: enables multiline-input
+            :param default_value: optional default value
             :return: the text entered by the user
             """
             kwargs = {
@@ -276,6 +286,8 @@ class Dialog:
                 "image": image,
                 "placeholder": placeholder,
             }
+            if default_value:
+                kwargs["default_value"] = str(default_value)
             if multiline:
                 kwargs["input_type"] = "text"
             js.self.postMessage(**kwargs)
@@ -283,7 +295,7 @@ class Dialog:
     else:
         @staticmethod
         async def text(prompt: str = None, title: str = "Text Input", empty: bool = None, placeholder: str = None,
-                       image=None, multiline=False):
+                       image=None, multiline=False, default_value: str = None):
             """
             prompts the user to enter text
 
@@ -291,65 +303,88 @@ class Dialog:
             :param title: the title of the textbox
             :param empty: allow the empty ``string`` as a valid result
             :param image: displays an image in the text-box
-            :param placeholder: the placehodler-text to be displayed in the textbox while it is empty
+            :param placeholder: the placeholder-text to be displayed in the textbox while it is empty
             :param multiline: enables multiline-input
+            :param default_value: optional default value
             :return: the text entered by the user
             """
             if title:
                 print(title)
             if image:
                 print(f"In the Browser, an image would have been shown here: {image}")
-            if prompt is None:
-                prompt = "Bitte geben sie Text ein:"
             if multiline:
                 print("press [Esc] and then [Enter] to finish...")
             return await prompt_toolkit.PromptSession().prompt_async(
-                prompt,
+                "Please enter text: " if prompt is None else prompt,
                 placeholder=placeholder,
                 validator=None if empty else _StringNotEmptyValidator(),
-                multiline=multiline
+                multiline=multiline,
+                default=default_value or ''
             )
 
     if is_pyodide_context():
         @staticmethod
-        async def number(prompt: str = None, title: str = "Number Input", image=None):
+        async def number(prompt: str = None, title: str = "Number Input", image=None,
+                         default_value: typing.Union[int, float] = None):
             """
             prompts the user to input a number
 
             :param prompt: the prompt the user will be shown
-            :param title: the title of the textbox
+            :param title: the title of the number-box
             :param number_type: the type of expected number
             :param image: displays an image in the number-box
-            :return: the number the user endered
+            :param default_value: optional default value
+            :return: the number the user entered
             """
-            js.self.postMessage(
-                type="input",
-                title=title,
-                text=prompt,
-                input_type='number',
-                image=image
-            )
+            msg = {
+                "type": "input",
+                "title": title,
+                "text": prompt,
+                "input_type": 'number',
+                "image": image
+            }
+            if default_value:
+                try:
+                    float(default_value)
+                except ValueError:
+                    raise ValueError("The default_value is not a valid number.")
+                else:
+                    msg["default_value"] = str(default_value)
+            js.self.postMessage(**msg)
             return await _wait_for_result()
     else:
         @staticmethod
-        async def number(prompt: str = None, title: str = "Number Input", image=None):
+        async def number(prompt: str = None, title: str = "Number Input", image=None,
+                         default_value: typing.Union[int, float] = None):
             """
             prompts the user to input a number
 
             :param prompt: the prompt the user will be shown
-            :param title: the title of the textbox
+            :param title: the title of the number-box
             :param number_type: the type of expected number
             :param image: displays an image in the number-box
-            :return: the number the user endered
+            :param default_value: optional default value
+            :return: the number the user entered
             """
+            if default_value:
+                try:
+                    float(default_value)
+                except ValueError:
+                    raise ValueError("The default_value is not a valid number.")
+                else:
+                    default_value = str(default_value)
             if title:
                 print(title)
             if image:
                 print(f"In the Browser, an image would have been shown here: {image}")
             if prompt is None:
-                prompt = "Bitte geben eine Zahl ein:"
-            validator = _ConvertableValidator(conversion_function=float, error_message="Bitte geben sie eine Zahl ein.")
-            res = await prompt_toolkit.PromptSession().prompt_async(prompt, validator=validator)
+                prompt = "Please enter a number: "
+            validator = _ConvertableValidator(conversion_function=float, error_message="Please enter a number.")
+            res = await prompt_toolkit.PromptSession().prompt_async(
+                prompt,
+                validator=validator,
+                default=default_value or ''
+            )
             try:
                 return int(res)
             except ValueError:
@@ -357,23 +392,42 @@ class Dialog:
 
     if is_pyodide_context():
         @staticmethod
-        async def date(prompt: str = None, use_time: bool = False, image=None):
+        async def date(prompt: str = None, use_time: bool = False, image=None,
+                       default_value: typing.Union[str, datetime.date, datetime.datetime] = None):
             """
             prompts the user to input a date
 
             :param prompt: the prompt the user will be shown
             :param use_time: also input time in addition to the date
             :param image: displays an image in the date-box
+            :param default_value: optional default value
             :return: the date entered by the user
             """
-            js.self.postMessage(
-                type="input",
-                title="Date input",
-                text=prompt,
-                input_type="date",
-                use_time=use_time,
-                image=image
-            )
+            msg = {
+                "type": "input",
+                "title": "Date input",
+                "text": prompt,
+                "input_type": "date",
+                "use_time": use_time,
+                "image": image
+            }
+
+            if default_value:
+                if isinstance(default_value, str):
+                    default_value = datetime.datetime.fromisoformat(default_value)
+                if isinstance(default_value, datetime.date):  # is date or datetime
+                    if use_time:
+                        if not isinstance(default_value, datetime.datetime):  # is a date
+                            default_value = datetime.datetime.fromisoformat(default_value.isoformat())
+                    else:
+                        if isinstance(default_value, datetime.datetime):
+                            default_value = default_value.date()
+                if not isinstance(default_value, datetime.date):
+                    raise ValueError(
+                        f"""The default_value must be a datetime.{"datetime" if use_time else "date"} or an ISO-string-representation of one.""")
+                msg["default_value"] = default_value.isoformat()
+
+            js.self.postMessage(**msg)
             timestamp = await _wait_for_result()
             try:
                 if use_time:
@@ -389,27 +443,43 @@ class Dialog:
             return res
     else:
         @staticmethod
-        async def date(prompt: str = None, use_time: bool = False, image=None):
+        async def date(prompt: str = None, use_time: bool = False, image=None,
+                       default_value: typing.Union[str, datetime.date, datetime.datetime] = None):
             """
             prompts the user to input a date
 
             :param prompt: the prompt the user will be shown
             :param use_time: also input time in addition to the date
             :param image: displays an image in the date-box
+            :param default_value: optional default value
             :return: the date entered by the user
             """
             if image:
                 print(f"In the Browser, an image would have been shown here: {image}")
-            if prompt is None:
-                prompt = "Bitte geben sie ein Datum ein:"
             validator = _ConvertableValidator(
                 conversion_function=datetime.datetime.fromisoformat,
-                error_message="Bitte geben sie ein gütliges Datum ein."
+                error_message="Please enter a valid date."
             )
-            entered_date = await prompt_toolkit.PromptSession().prompt_async(prompt, validator=validator)
+            if default_value:
+                if isinstance(default_value, datetime.date):
+                    default_value = default_value.isoformat()
+                else:
+                    try:
+                        datetime.datetime.fromisoformat(default_value)
+                    except ValueError:
+                        raise ValueError(
+                            f"""The default_value must be a datetime.{"datetime" if use_time else "date"} or an ISO-string-representation of one.""")
+
+            prompt = prompt or "Please enter a date: "
+
+            entered_date = await prompt_toolkit.PromptSession().prompt_async(
+                prompt,
+                validator=validator,
+                default=default_value or ''
+            )
             res = datetime.datetime.fromisoformat(entered_date)
             if not use_time:
-                res = datetime.date.fromtimestamp(res.timestamp())
+                res = res.date()
             return res
 
     if is_pyodide_context():
@@ -418,7 +488,7 @@ class Dialog:
             """
             shows a diff-view to the user
 
-            :param title: the title of the box
+            :param title: the title of the diff-box
             :param diffs: the data to be shown
             :param image: displays an image in the diff-box
             """
@@ -429,7 +499,7 @@ class Dialog:
             """
             shows a diff-view to the user
 
-            :param title: the title of the box
+            :param title: the title of the diff-box
             :param diffs: the data to be shown
             :param image: displays an image in the diff-box
             """
