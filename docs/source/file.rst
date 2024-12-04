@@ -1,11 +1,11 @@
 Files
 =====
 Files, in general, are for storing data. In Scriptor, there is a set of typical tasks where files are involved. The
-``File``-Class provies several methods to do those tasks easily and efficiently.
+``File``-class provides several methods to do those tasks easily and efficiently.
 
 
 .. note::
-    In the first examples, we'll use the download()-method of Files to make your browser download it.
+    In the first examples, we'll use the ``download``-method of ``File`` to make your browser download it.
     This will be explained later in this document.
 
 Creating Files from Data
@@ -13,7 +13,7 @@ Creating Files from Data
 
 from_string
 ~~~~~~~~~~~
-This method is used to create a File from a string (aka. a text-file).
+This method is used to create a File from a ``string`` (aka. a text-file).
 
 .. code-block:: python
 
@@ -28,7 +28,7 @@ This method is used to create a File from a string (aka. a text-file).
 
 from_bytes
 ~~~~~~~~~~
-Similar to the ``from_string``-Method, this method creates a File from bytes. This is usually useful for working with
+Similar to the ``from_string``-Method, this method creates a File from ``bytes``. This is usually useful for working with
 files like xlsx, zip, pdf, etc. (Also there are extra convenience-methods for handling tables.)
 
 .. code-block:: python
@@ -47,7 +47,7 @@ from_table
 This method can handle two different representations of tables and create a xlsx- or csv-file from them.
 Tables can either be defined as lists of dicts or lists of lists. In the case of dicts, the keys from the dict must
 match the headers of the table. If no header is specified explicitly, it is automatically generated from the
-dictinaries' keys. In case of a list of lists, the first list in the outer list is considered the header if no header
+dictionaries' keys. In case of a list of lists, the first list in the outer list is considered the header if no header
 is defined explicitly.
 
 .. code-block:: python
@@ -126,13 +126,13 @@ to see what it looks like. To achieve this, you just have to set ``fill_empty`` 
         file = File.from_table(
             tbl_data,
             tbl_head,
-            filename="simple_table3.xlsx",
+            filename="simple_table4.xlsx",
             fill_empty=True,
             auto_str=True
         )
         file.download()
         print("Please check your downloads."
-              " You should have a new file called simple_table3.xlsx")
+              " You should have a new file called simple_table4.xlsx")
 
 
 Besides xlsx, csv is supported. You can just change the file-name and it will automatically generate the right format.
@@ -151,16 +151,16 @@ Besides xlsx, csv is supported. You can just change the file-name and it will au
         file = File.from_table(
             tbl_data,
             tbl_head,
-            filename="simple_table4.csv",
+            filename="simple_table5.csv",
             fill_empty=True,
             auto_str=True
         )
         file.download()
         print("Please check your downloads."
-              " You should have a new file called simple_table4.csv")
+              " You should have a new file called simple_table5.csv")
 
 
-The default delimiter is a comma (,), but sometimes, especially for Excel in europe, you might want to use a semicolon
+The default delimiter for csv-files is a comma (,), but sometimes, especially for Excel in europe, you might want to use a semicolon
 (;). This is simply achieved by passing it as the parameter ``csv_delimiter`` (if you pass it while generating xlsx,
 it is ignored).
 
@@ -178,14 +178,14 @@ it is ignored).
         file = File.from_table(
             tbl_data,
             tbl_head,
-            filename="simple_table5.csv",
+            filename="simple_table6.csv",
             fill_empty=True,
             auto_str=True,
             csv_delimiter=";"
         )
         file.download()
         print("Please check your downloads."
-              " You should have a new file called simple_table5.csv")
+              " You should have a new file called simple_table6.csv")
 
 
 Getting information about the File
@@ -203,7 +203,7 @@ The ``get_filename``-method returns, as the name suggests, the name of the file.
     async def main():
         file = File.from_string("Hello World", "hello_world.txt")
         filename = file.get_filename()
-        print(f"The File you just created has the name {filename}")
+        print(f"The file you just created has the name {filename}")
 
 
 get_size
@@ -218,7 +218,7 @@ The ``get_size``-method returns the size of the file in bytes.
     async def main():
         file = File.from_string("Hello World", "hello_world.txt")
         filesize = file.get_size()
-        print(f"The File has a size of {filesize} bytes.")
+        print(f"The file has a size of {filesize} bytes.")
 
 Using Data from a File
 ----------------------
@@ -244,7 +244,7 @@ The ``as_bytes``-method returns the complete data of the file as a ``bytestring`
 
 as_text
 ~~~~~~~
-The ``as_text``-method return the complete data of the file as a decoded ``string``, if possible. If not, it raises an
+The ``as_text``-method returns the complete data of the file as a decoded ``string``, if possible. If not, it raises an
 error.
 
 .. code-block:: python
@@ -296,8 +296,8 @@ a list of dicts or a list of lists.
         print(file.as_dict_table())
 
 
-Getting the file to and from your PC.
--------------------------------------
+Getting the file to and from your PC
+------------------------------------
 
 download
 ~~~~~~~~
@@ -350,9 +350,9 @@ stops (unless you handle the error differently).
 
 save_dialog
 ~~~~~~~~~~~
-The ``save_dialog`` is the counterpart to the open_dialog and provides an alternative to the download-method. The user
-is prompted to save the file. They can choose to select an existing file, which will then get overwritten, or a new
-filename that doesn't exist yet, which will then be created. This also means that the file can be saved with a
+The ``save_dialog`` is the counterpart to the ``open_dialog`` and provides an alternative to the ``download``-method.
+The user is prompted to save the file. They can choose to select an existing file, which will then get overwritten, or
+a new filename that doesn't exist yet, which will then be created. This also means that the file can be saved with a
 different name than defined in your code. As with the ``open_dialog``, if the user cancels the dialog, an error will be
 raised.
 
@@ -363,7 +363,7 @@ raised.
     from viur.scriptor import *
 
     async def main():
-        print("Please select where to save the test-file")
+        print("Please select where to save the test-file.")
         testfile = File.from_string("Hello World", "save_test.txt")
         await testfile.save_dialog()
 

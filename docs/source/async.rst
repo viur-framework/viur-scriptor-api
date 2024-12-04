@@ -21,7 +21,7 @@ async Keyword
 
 The ``async`` keyword is used to define an asynchronous function. An asynchronous function is a function that can be
 paused and resumed, allowing other code to run in the meantime. Also you can use the ``await``-keyword only in
-``async``-functinos and methods.
+``async``-functions and methods.
 
 
 await Keyword

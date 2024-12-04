@@ -232,7 +232,7 @@ to use the ``use_time``-parameter:
         date = await Dialog.date("When were you born?", use_time=True)
         print(f"You were born on {date}.")
 
-This example will ask for a date and a time and therefor return a ``datetime.datetime``-object.
+This example will ask for a date and a time and therefore return a ``datetime.datetime``-object.
 
 | Similar to ``text`` and ``number``, there's an option for a default value. In this case, there are several
   format-options:

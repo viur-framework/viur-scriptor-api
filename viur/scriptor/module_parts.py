@@ -430,7 +430,7 @@ class Method:
     def is_supporting_multiple_methods(self):
         return len(self.methods) > 1
 
-    async def call(self, *args, **kwargs):
+    async def __call__(self, *args, **kwargs):
         route = f"/{self._module.name}/{self._name}"
 
         method = "GET"
@@ -440,7 +440,7 @@ class Method:
         if self.support_method(method):
             if self._attr:
                 if method.lower() in self._attr:
-                    return self._attr[method.lower()](*args, **kwargs)
+                    return await self._attr[method.lower()](*args, **kwargs)
 
         renderer = kwargs.get("scriptor_renderer", "json")
         if "scriptor_renderer" in kwargs:

@@ -1,7 +1,7 @@
 Modules
 =======
 
-The ``Modules``-Class provides access to the database-modules. In scriptor, theres a preconfigured instance under the
+The ``Modules``-class provides access to the database-modules. In scriptor, there's a preconfigured instance under the
 name ``modules`` (all lowercase) connected to your viur backend. Accessing a module is simply done by calling
 ``get_module``.
 
@@ -28,8 +28,8 @@ and ``preview``.
 
 In addition to that, ``TreeModule`` also has ``list_root_nodes`` and ``move``.
 
-``TreeModule`` and ``ListModule`` also need an extra parameter for methords, that interact with the database.
-For ``ListModule``, this is ``group``. The group paramater filters only records that belong to that group and also
+``TreeModule`` and ``ListModule`` also need an extra parameter for methods, that interact with the database.
+For ``ListModule``, this is ``group``. The group parameter filters only records that belong to that group and also
 potentially modifies the returned model (i.e. if you're selling kitchen supplies, pans might have a diameter, which
 would be unused for knives).
 For ``TreeModule``, the extra parameter is ``skel_type``. It can have one of two values: ``node`` or ``leaf``. This
@@ -51,7 +51,7 @@ Here's how you'd create five new records with the name test and sortindex rangin
         example = await modules.get_module("example")
         for i in range(example_entries_to_add):
             ProgressBar.set(i/example_entries_to_add*100, i, example_entries_to_add, str(i))
-            await example.add({"name": f"test", "sortindex": i+1})
+            await example.add({"name": "test", "sortindex": i+1})
         ProgressBar.unset()
 
 
@@ -81,7 +81,7 @@ records named "test" before and after the edit.
         print(f"""The edited record:\n{edited_test}""")
 
 
-After creating and renamin test records, you might want to delete them from the database. This example shows how to
+After creating and renaming test records, you might want to delete them from the database. This example shows how to
 delete all records with the name "test_edited":
 
 .. code-block:: python

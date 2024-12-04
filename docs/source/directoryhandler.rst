@@ -20,13 +20,13 @@ scriptor-session started, you'll get asked for permissions by the browser. (see 
 
 list_files and list_subdirs
 ---------------------------
-The ``list_files``- and ``list_subdirs``-methods return a list of all files and a list of all directorys in the selected
-directory respectively. (see next example)
+The ``list_files``- and ``list_subdirs``-methods return a list of all files and a list of all directories in the
+selected directory respectively. (see next example)
 
 write_to_file
 -------------
 The ``write_to_file``-method writes binary data to a file. If the file already exists it will raise an error, unless you
-passed ``may_already_exist`` as True. If you did, it will completely replace the files content.
+passed ``may_already_exist`` as ``True``. If you did, it will completely replace the files content.
 (see ``open_file_for_writing`` example)
 
 
@@ -114,7 +114,7 @@ a reference to it, so ``close_all`` only needs to be called on the root-``Direct
 read_from_file
 --------------
 The ``read_from_file``-method reads data from a file. You can either read the whole file, or pass a ``start``- and/or
-``end``-parameter to read only a part of the file. (If you haven't, pleas execute the first example-script from this
+``end``-parameter to read only a part of the file. (If you haven't, please execute the first example-script from this
 document. The test.bin created by it is expected to be in the directory we're using in this example.)
 
 .. code-block:: python
@@ -132,5 +132,5 @@ document. The test.bin created by it is expected to be in the directory we're us
         five_to_fifteen = await my_dir.read_from_file("test.bin", start=5, end=15)
         print("bytes 5 to 15: ", five_to_fifteen)
         last_five = await my_dir.read_from_file("test.bin", start=-5)
-        print("the lasst 5 bytes: ", last_five)
+        print("the last 5 bytes: ", last_five)
 
