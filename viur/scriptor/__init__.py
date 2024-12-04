@@ -39,6 +39,9 @@ else:
             modules = None
             return False
 
+def version():
+    return "1.0.1"
+
 __all__ = [
     'is_pyodide_context',
     'is_pyodide_in_browser',
@@ -55,6 +58,7 @@ __all__ = [
     'extract_items',
     'map_extract_items',
     'ProgressBar',
+    'version',
 ]
 
 if is_pyodide_context():

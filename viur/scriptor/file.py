@@ -18,6 +18,7 @@ class File:
 
     _table_mimetypes = {
         'text/csv': 'csv',
+        'text/plain': 'csv',  # tab-separated-values
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx'
     }
 
@@ -132,11 +133,15 @@ class File:
             table.append(row)
         return table
 
-    def _csv_data_to_list_table(self):
-        reader = csv.reader(self.as_text().strip().split('\n'))
+    def _csv_data_to_list_table(self, delimiter=None):
+        if delimiter:
+            params = {'delimiter': delimiter}
+        else:
+            params = {}
+        reader = csv.reader(self.as_text().strip().split('\n'), **params)
         return list(reader)
 
-    def as_list_table(self):
+    def as_list_table(self, csv_delimiter=None):
         """
         loads tabular data (i.e. a csv- or xlsx-file) as a ``list`` of ``list``\\ s
 
@@ -146,18 +151,23 @@ class File:
             detected_mime_type = self._table_mimetypes[self.detect_mime_type()]
         except KeyError:
             raise ValueError("The content of the file doesn't seem to be a table.")
+
         if detected_mime_type == "xlsx":
             return self._xls_data_to_list_table()
         elif detected_mime_type == "csv":
-            return self._csv_data_to_list_table()
+            if csv_delimiter:
+                params = {'delimiter': csv_delimiter}
+            else:
+                params = {}
+            return self._csv_data_to_list_table(**params)
 
-    def as_dict_table(self):
+    def as_dict_table(self, csv_delimiter=None):
         """
         loads tabular data (i.e. a csv- or xlsx-file) as a ``list`` of ``dict``\\ s
 
         :return: ``list`` of ``dict``\\ s representing a table
         """
-        return list_table_to_dict_table(self.as_list_table())
+        return list_table_to_dict_table(self.as_list_table(csv_delimiter=csv_delimiter))
 
     def detect_mime_type(self):
         """

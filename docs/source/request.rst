@@ -1,10 +1,10 @@
 WebRequest
 ==========
-The ``WebRequest``-Class handles HTTP(S)-Request. It supports GET, POST, PUT and DELETE operations.
-The main functionality is in the ``request``-method, to which you have to pass the method-parameter.
+The ``WebRequest``-class handles HTTP(S)-requests. It supports GET, POST, PUT and DELETE operations.
+The main functionality is in the ``request``-method, to which you have to pass the ``method``-parameter.
 For convenience there are the explicit methods ``get``, ``post``, ``put`` and ``delete``.
 
-In the Browser, some requests might not succeed because of CORS-policies (Cross Origin Resource Sharing:
+In the browser, some requests might not succeed because of CORS-policies (Cross Origin Resource Sharing:
 see `the wikipedia article for CORS <https://en.wikipedia.org/wiki/Cross-origin_resource_sharing>`_). This
 will raise an exception.
 
