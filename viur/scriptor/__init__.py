@@ -10,6 +10,13 @@ from requests.exceptions import ConnectionError
 from .directory_handler import DirectoryHandler
 from .progressbar import ProgressBar
 
+__version__ = '1.0.1'
+
+
+def version():
+    return __version__
+
+
 modules = None
 params = None
 
@@ -38,9 +45,6 @@ else:
             print('Connection failed.')
             modules = None
             return False
-
-def version():
-    return "1.0.1"
 
 __all__ = [
     'is_pyodide_context',
