@@ -4,6 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "viur-scriptor-api"
+dynamic = ["version"]
 authors = [
   { name = "Mausbrand Informationssysteme GmbH", email = "devs@viur.dev" },
 ]
