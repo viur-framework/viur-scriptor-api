@@ -4,7 +4,6 @@ build-backend = "hatchling.build"
 
 [project]
 name = "viur-scriptor-api"
-version = "1.0.1"
 authors = [
   { name = "Mausbrand Informationssysteme GmbH", email = "devs@viur.dev" },
 ]
@@ -40,6 +39,9 @@ exclude = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["viur"]
+
+[tool.hatch.version]
+path = "viur/scriptor/__init__.py"
 
 [project.urls]
 "Homepage" = "https://github.com/viur-framework/viur-scriptor-api"
