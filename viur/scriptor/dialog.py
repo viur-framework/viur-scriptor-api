@@ -192,11 +192,12 @@ class Dialog:
             :return: a ``tuple`` of the selected options
             """
             if isinstance(options, dict):
-                assert all(i is not None for i in options.values()), "No value of a choices-dict may be None."
+                assert all(value is not None for value in options.values()), "No value of a choices-dict may be None."
                 choices = options
             elif isinstance(options, (list, tuple)):
-                choices = {i: i for i in options if
-                           i is not None}
+                choices = {option: option for option in options if option is not None}
+            else:
+                raise ValueError("Only 'dict' or 'list' or 'tuple' can be options.'")
             title = title or "Select"
             text = text or ("Please select any options:" if multiselect else "Please select an option:")
             js.self.postMessage(
@@ -226,8 +227,14 @@ class Dialog:
             :param image: displays an image in the select-box
             :return: a ``tuple`` of the selected options
             """
-            assert isinstance(options, dict)
-            keys = list(options.keys())
+            if isinstance(options, dict):
+                keys = list(options.keys())
+                choices = options
+            elif isinstance(options, (list, tuple)):
+                keys = options
+                choices = {option: option for option in options if option is not None}
+            else:
+                raise ValueError("Only 'dict' or 'list' or 'tuple' can be options.'")
             title = title or "Select"
             text = text or ("Please select any options:" if multiselect else "Please select an option:")
             print(title)
@@ -243,9 +250,9 @@ class Dialog:
             menu_entry_index = terminal_menu.show()
             print(f"""{menu_entry_index = }""")
             if multiselect:
-                return [options[keys[selection]] for selection in menu_entry_index]
+                return [choices[keys[selection]] for selection in menu_entry_index]
             else:
-                return options[keys[menu_entry_index]]
+                return choices[keys[menu_entry_index]]
 
     @staticmethod
     async def confirm(text: str = None, title: str = None, yes: str = "Yes", no: str = "No"):
