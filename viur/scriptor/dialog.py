@@ -179,7 +179,7 @@ class Dialog:
     if is_pyodide_context():
         @staticmethod
         async def select(options: dict[str, str] | list[str] | tuple[str], title: str = None, text: str = None,
-                         multiselect: bool = False, image=None):
+                         multiselect: bool = False, image=None,in_multiple:bool=False):
             """
             Gives the user a choice between different options.
             If multiselect is False, only one selection is allowed, otherwise the user can select multiple options.
@@ -189,6 +189,7 @@ class Dialog:
             :param text: the text to be displayed
             :param multiselect: if True, multiple options can be selected, otherwise only one
             :param image: displays an image in the select-box
+            :param in_multiple: If true only the config of the Dialog is returned
             :return: a ``tuple`` of the selected options
             """
             if isinstance(options, dict):
@@ -200,6 +201,15 @@ class Dialog:
                 raise ValueError("Only 'dict' or 'list' or 'tuple' can be options.'")
             title = title or "Select"
             text = text or ("Please select any options:" if multiselect else "Please select an option:")
+            if in_multiple:
+                return {
+                    "type": "select",
+                    "title": title,
+                    "text": text,
+                    "choices": choices,
+                    "multiple": multiselect,
+                    "image": image
+                }
             js.self.postMessage(
                 type="select",
                 title=title,
@@ -272,7 +282,7 @@ class Dialog:
     if is_pyodide_context():
         @staticmethod
         async def text(prompt: str = None, title: str = "Text Input", empty: bool = None, placeholder: str = None,
-                       image=None, multiline=False, default_value: str = None):
+                       image=None, multiline=False, default_value: str = None, in_multiple: bool = False):
             """
             prompts the user to enter text
 
@@ -283,6 +293,7 @@ class Dialog:
             :param placeholder: the placeholder-text to be displayed in the textbox while it is empty
             :param multiline: enables multiline-input
             :param default_value: optional default value
+            :param in_multiple: If true only the config of the Dialog is returned
             :return: the text entered by the user
             """
             kwargs = {
@@ -297,6 +308,8 @@ class Dialog:
                 kwargs["default_value"] = str(default_value)
             if multiline:
                 kwargs["input_type"] = "text"
+            if in_multiple:
+                return kwargs
             js.self.postMessage(**kwargs)
             return await _wait_for_result()
     else:
@@ -332,7 +345,7 @@ class Dialog:
     if is_pyodide_context():
         @staticmethod
         async def number(prompt: str = None, title: str = "Number Input", image=None,
-                         default_value: typing.Union[int, float] = None):
+                         default_value: typing.Union[int, float] = None, in_multiple: bool = False):
             """
             prompts the user to input a number
 
@@ -341,6 +354,7 @@ class Dialog:
             :param number_type: the type of expected number
             :param image: displays an image in the number-box
             :param default_value: optional default value
+            :param in_multiple: If true only the config of the Dialog is returned
             :return: the number the user entered
             """
             msg = {
@@ -357,6 +371,8 @@ class Dialog:
                     raise ValueError("The default_value is not a valid number.")
                 else:
                     msg["default_value"] = str(default_value)
+            if in_multiple:
+                return msg
             js.self.postMessage(**msg)
             return await _wait_for_result()
     else:
@@ -589,3 +605,20 @@ class Dialog:
                 selection = json.loads(selection)
                 assert isinstance(selection, int)
                 return selection
+
+    if is_pyodide_context():
+        @staticmethod
+        async def multiple(title: str, components: list):
+            """
+            :param title: the header of the component
+            :param components: list of components
+            """
+            msg = {
+                "type": "multiple-dialog",
+                "title": title,
+                "components": json.dumps(components)
+            }
+            js.self.postMessage(**msg)
+            rest = await _wait_for_result()
+            return json.loads(rest)
+
