@@ -41,7 +41,7 @@ extensions = ['sphinx.ext.autosummary', 'sphinx.ext.autodoc']  # 'autoapi.extens
 
 templates_path = ['_templates']
 exclude_patterns = []
-# autoapi_dirs = ['../../viur/scriptor']
+autoapi_dirs = ['../../viur/scriptor']
 # autoapi_options = ['members', 'undoc-members', 'show-inheritance', 'show-module-summary']
 # autoapi_dirs = ['../../src/viur-scriptor-api']
 
