@@ -26,6 +26,8 @@ fake_manager_module = module_from_spec(spec_from_loader('manager', None))
 sys.modules['manager'] = fake_manager_module
 fake_config_module = module_from_spec(spec_from_loader('config', None))
 sys.modules['config'] = fake_config_module
+fake_magic_module = module_from_spec(spec_from_loader('magic', None))
+sys.modules['magic'] = fake_magic_module
 
 sys.path.append(os.path.abspath('../..'))
 
@@ -43,7 +45,7 @@ extensions = ['sphinx.ext.autosummary', 'sphinx.ext.autodoc']  # 'autoapi.extens
 autoapi_type = 'python'
 templates_path = ['_templates']
 exclude_patterns = []
-autoapi_dirs = ['../../viur']
+autoapi_dirs = ['../../viur/scriptor']
 autoapi_root = 'scriptor'
 # autoapi_options = ['members', 'undoc-members', 'show-inheritance', 'show-module-summary']
 # autoapi_dirs = ['../../src/viur-scriptor-api']
