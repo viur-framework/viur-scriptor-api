@@ -39,9 +39,12 @@ copyright = f"""{datetime.datetime.now().strftime("%Y")} {author}"""
 extensions = ['sphinx.ext.autosummary', 'sphinx.ext.autodoc']  # 'autoapi.extension' for automatic api-doc
 # html_show_sourcelink = False
 
+
+autoapi_type = 'python'
 templates_path = ['_templates']
 exclude_patterns = []
-autoapi_dirs = ['../../viur/scriptor']
+autoapi_dirs = ['../../viur']
+autoapi_root = 'scriptor'
 # autoapi_options = ['members', 'undoc-members', 'show-inheritance', 'show-module-summary']
 # autoapi_dirs = ['../../src/viur-scriptor-api']
 
