@@ -1,3 +1,6 @@
-sphinx
+Sphinx
 sphinx-autoapi
 sphinx-rtd-theme
+chardet
+python-magic
+openpyxl
