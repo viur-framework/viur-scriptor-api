@@ -145,13 +145,21 @@ class ExtendedModule(BaseModule):
                 _url.append(group)
             _url = join_url(_url)
 
+        limit = None
+        if "limit" in params:
+            limit = params["limit"]
+
         batch = []
         cursor = None
         fetched = False
 
+        counter = 0
         while True:
             for i in batch:
                 yield i
+                counter += 1
+            if limit and counter >= limit:
+                return
             if fetched and not cursor:
                 return
             if cursor:

@@ -2,7 +2,7 @@ import json
 import chardet
 import magic
 from openpyxl.reader.excel import ExcelReader
-from io import BytesIO
+from io import BytesIO, StringIO
 import csv
 from ._utils import list_table_to_dict_table, normalize_table, list_to_excel, list_to_csv, save_file
 from .dialog import Dialog
@@ -138,7 +138,7 @@ class File:
             params = {'delimiter': delimiter}
         else:
             params = {}
-        reader = csv.reader(self.as_text().strip().split('\n'), **params)
+        reader = csv.reader(StringIO(self.as_text()), **params)
         return list(reader)
 
     def as_list_table(self, csv_delimiter=None):
