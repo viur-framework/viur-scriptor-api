@@ -179,7 +179,8 @@ class Dialog:
     if is_pyodide_context():
         @staticmethod
         async def select(options: dict[str, str] | list[str] | tuple[str], title: str = None, text: str = None,
-                         multiselect: bool = False, image=None,in_multiple:bool=False):
+                         multiselect: bool = False, image=None, default_value: list[str] | str = None ,
+                         in_multiple: bool = False):
             """
             Gives the user a choice between different options.
             If multiselect is False, only one selection is allowed, otherwise the user can select multiple options.
@@ -190,6 +191,7 @@ class Dialog:
             :param multiselect: if True, multiple options can be selected, otherwise only one
             :param image: displays an image in the select-box
             :param in_multiple: If true only the config of the Dialog is returned
+            :param default_value: The default value for the options.
             :return: a ``tuple`` of the selected options
             """
             if isinstance(options, dict):
@@ -199,6 +201,12 @@ class Dialog:
                 choices = {option: option for option in options if option is not None}
             else:
                 raise ValueError("Only 'dict' or 'list' or 'tuple' can be options.'")
+
+            if default_value:
+                assert isinstance(default_value, (list,str)), "pre_selected must be a list or a string."
+                if not multiselect:
+                    assert len(default_value) == 1, "Pre-selected can only have one option in not multiselect."
+
             title = title or "Select"
             text = text or ("Please select any options:" if multiselect else "Please select an option:")
             if in_multiple:
@@ -208,7 +216,8 @@ class Dialog:
                     "text": text,
                     "choices": choices,
                     "multiple": multiselect,
-                    "image": image
+                    "image": image,
+                    "default_value":default_value
                 }
             js.self.postMessage(
                 type="select",
@@ -216,7 +225,8 @@ class Dialog:
                 text=text,
                 choices=pyodide.ffi.to_js(choices, dict_converter=js.Object.fromEntries),
                 multiple=multiselect,
-                image=image
+                image=image,
+                default_value=default_value
             )
             if multiselect:
                 return [choices[i] for i in (await _wait_for_result())]
@@ -225,7 +235,8 @@ class Dialog:
     else:
         @staticmethod
         async def select(options: dict[str, str] | list[str] | tuple[str], title: str = None, text: str = None,
-                         multiselect: bool = False, image=None):
+                         multiselect: bool = False, image=None, in_multiple: bool = False,
+                         default_value: list[str] | str = None):
             """
             Gives the user a choice between different options.
             If multiselect is False, only one selection is allowed, otherwise the user can select multiple options.
@@ -235,6 +246,8 @@ class Dialog:
             :param text: the text to be displayed
             :param multiselect: if True, multiple options can be selected, otherwise only one
             :param image: displays an image in the select-box
+            :in_multiple: Just for testing purposes.
+            :in_multiple: Just for testing purposes.
             :return: a ``tuple`` of the selected options
             """
             if isinstance(options, dict):
@@ -315,7 +328,7 @@ class Dialog:
     else:
         @staticmethod
         async def text(prompt: str = None, title: str = "Text Input", empty: bool = None, placeholder: str = None,
-                       image=None, multiline=False, default_value: str = None):
+                       image=None, multiline=False, default_value: str = None,in_multiple: bool = False):
             """
             prompts the user to enter text
 
@@ -326,6 +339,7 @@ class Dialog:
             :param placeholder: the placeholder-text to be displayed in the textbox while it is empty
             :param multiline: enables multiline-input
             :param default_value: optional default value
+            :param in_multiple: just for testing purposes
             :return: the text entered by the user
             """
             if title:
@@ -378,7 +392,7 @@ class Dialog:
     else:
         @staticmethod
         async def number(prompt: str = None, title: str = "Number Input", image=None,
-                         default_value: typing.Union[int, float] = None):
+                         default_value: typing.Union[int, float] = None,in_multiple: bool = False):
             """
             prompts the user to input a number
 
@@ -387,6 +401,7 @@ class Dialog:
             :param number_type: the type of expected number
             :param image: displays an image in the number-box
             :param default_value: optional default value
+            :param in_multiple: just for testing purposes
             :return: the number the user entered
             """
             if default_value:
@@ -622,3 +637,7 @@ class Dialog:
             rest = await _wait_for_result()
             return json.loads(rest)
 
+    else:
+        @staticmethod
+        async def multiple(title: str, components: list):
+           return components
