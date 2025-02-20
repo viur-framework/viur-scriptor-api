@@ -236,26 +236,27 @@ def stringify(data, max_depth=None):
     return str(data)
 
 
-def flatten_dict(data, prefix=None):
+def flatten_dict(data, none_value="", prefix=None):
     if isinstance(data, list):
         if any(isinstance(entry, dict) for entry in data):
             if not all(isinstance(entry, dict) for entry in data):
                 raise ValueError("Inconsistent data in List, dicts and other types are mixed.")
-        else:
-            for index, value in enumerate(data):
-                if prefix is not None:
-                    yield from flatten_dict(value, f"""{prefix}.{index}""")
-                else:
-                    yield from flatten_dict(value, f"""{index}""")
+        if not data:
+            yield prefix, none_value
+        for index, value in enumerate(data):
+            if prefix is not None:
+                yield from flatten_dict(value, none_value=none_value, prefix=f"""{prefix}.{index}""")
+            else:
+                yield from flatten_dict(value, none_value=none_value, prefix=f"""{index}""")
     elif isinstance(data, dict):
         for key, value in data.items():
             if prefix is not None:
-                yield from flatten_dict(value, f"""{prefix}.{key}""")
+                yield from flatten_dict(value, none_value=none_value, prefix=f"""{prefix}.{key}""")
             else:
-                yield from flatten_dict(value, f"""{key}""")
+                yield from flatten_dict(value, none_value=none_value, prefix=f"""{key}""")
     else:
         if data is None:
-            data = ''
+            data = none_value
         yield prefix, data
 
 

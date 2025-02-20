@@ -82,6 +82,13 @@ class BaseModule:
         url = self._build_url(action="edit", url=_url, module=self._name, group=group, key=key, skel_type=skel_type)
         return await self._parent.viur_request("SECURE_POST", url, params=params, renderer=_renderer)
 
+    async def add_or_edit(self, key: str = "", params: dict = None, group: str = "", skel_type: str = "", **kwargs):
+        _url = kwargs.get('url', '')
+        _renderer = kwargs.get('renderer', '')
+        url = self._build_url(action="add_or_edit", url=_url, module=self._name, group=group, key=key,
+                              skel_type=skel_type)
+        return await self._parent.viur_request("SECURE_POST", url, params=params, renderer=_renderer)
+
 
 class SingletonModule(BaseModule):
     """
@@ -98,6 +105,16 @@ class SingletonModule(BaseModule):
         :return: the edited database-record with structure- and error-information
         """
         return super().edit(module=self._name, params=params, **kwargs)
+
+    def add_or_edit(self, params: dict = None, **kwargs):  # without key
+        """
+        saves changes to a record in the database or create it if it does not exist
+
+        :param params: parameters to pass to the database
+        :param kwargs: additional keyword-arguments
+        :return: the edited database-record with structure- and error-information
+        """
+        return super().add_or_edit(module=self._name, params=params, **kwargs)
 
     async def preview(self, params: dict = None, **kwargs):
         """
@@ -245,6 +262,18 @@ class ListModule(ExtendedModule):
         :return: the edited database-record with structure- and error-information
         """
         return await super().edit(key=key, params=params, group=group, **kwargs)
+
+    async def add_or_edit(self, key: str = "", params: dict = None, group: str = "", **kwargs):
+        """
+        writes changes to a database-record or creates it, if it does not exist
+
+        :param key: the key of the record to be edited
+        :param params: parameters to pass to the database
+        :param group: applied group-specific modifiers to the model
+        :param kwargs: additional keyword-arguments
+        :return: the edited database-record with structure- and error-information
+        """
+        return await super().add_or_edit(key=key, params=params, group=group, **kwargs)
 
     async def list(self, params: dict = None, group: str = "", **kwargs):
         """

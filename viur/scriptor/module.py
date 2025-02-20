@@ -60,7 +60,7 @@ class Modules:
 
             Dialog.print(f"""LOGIN RESPONSE:\n{response.content = }""")
 
-            if response.status_code == 200 and response.json() != "FAILURE":
+            if response.status_code == 200 and (b"""JSON(("OKAY"))""" in response.content or response.json() != "FAILURE"):
                 Dialog.print("LOGIN SUCCESS")
                 self._cookies = requests.sessions.cookiejar_from_dict(self._session.cookies.get_dict())
             else:
