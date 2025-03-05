@@ -288,3 +288,13 @@ if is_pyodide_context():
         buffer.buffer.__len__ = lambda: length
         blob = js.Blob.new([buffer.buffer], {type: 'application/octet-stream'})
         return blob
+
+if is_pyodide_context():
+    def clear_console():
+        js.self.postMessage(
+            type="clear"
+        )
+else:
+    def clear_console():
+        os.system('cls' if os.name == 'nt' else 'clear')
+

@@ -3,7 +3,7 @@ from .dialog import Dialog
 from .file import File
 from .logger import logger
 from .module import Modules
-from ._utils import is_pyodide_context, is_pyodide_in_browser, gather_async_iterator
+from ._utils import is_pyodide_context, is_pyodide_in_browser, gather_async_iterator, clear_console
 from .utils import extract_items, map_extract_items
 import os
 from requests.exceptions import ConnectionError
@@ -26,8 +26,14 @@ if is_pyodide_context():
 
     async def _init_modules():
         global modules
+        global params
         modules = Modules(config.BASE_URL, None, None)
         await modules.init()
+        try:
+            import manager
+            params = manager.params.to_py()
+        except ModuleNotFoundError:
+            pass
         return True
 else:
     async def _init_modules(base_url=None, username=None, password=None, login_skey=None, script_params=None):
