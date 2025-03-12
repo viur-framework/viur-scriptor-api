@@ -120,6 +120,26 @@ class Dialog:
 
     if is_pyodide_context():
         @staticmethod
+        async def raw_html(html: str):
+            """
+            Shows preformatted html to the user.
+
+            :param html: the preformatted html as a string
+            """
+            js.self.postMessage(type="raw_html", html=html)
+            await _wait_for_result()
+    else:
+        @staticmethod
+        async def raw_html(html: str):
+            """
+            Shows preformatted html to the user.
+
+            :param html: the preformatted html as a string
+            """
+            print(html)
+
+    if is_pyodide_context():
+        @staticmethod
         async def _open_file_dialog(prompt=None):
             js.self.postMessage(type="showOpenFilePicker")
             res = await _wait_for_result()
@@ -179,7 +199,7 @@ class Dialog:
     if is_pyodide_context():
         @staticmethod
         async def select(options: dict[str, str] | list[str] | tuple[str], title: str = None, text: str = None,
-                         multiselect: bool = False, image=None, default_value: list[str] | str = None ,
+                         multiselect: bool = False, image=None, default_value: list[str] | str = None,
                          in_multiple: bool = False):
             """
             Gives the user a choice between different options.
@@ -203,7 +223,7 @@ class Dialog:
                 raise ValueError("Only 'dict' or 'list' or 'tuple' can be options.'")
 
             if default_value:
-                assert isinstance(default_value, (list,str)), "pre_selected must be a list or a string."
+                assert isinstance(default_value, (list, str)), "pre_selected must be a list or a string."
                 if not multiselect:
                     assert len(default_value) == 1, "Pre-selected can only have one option in not multiselect."
 
@@ -217,7 +237,7 @@ class Dialog:
                     "choices": choices,
                     "multiple": multiselect,
                     "image": image,
-                    "default_value":default_value
+                    "default_value": default_value
                 }
             js.self.postMessage(
                 type="select",
@@ -328,7 +348,7 @@ class Dialog:
     else:
         @staticmethod
         async def text(prompt: str = None, title: str = "Text Input", empty: bool = None, placeholder: str = None,
-                       image=None, multiline=False, default_value: str = None,in_multiple: bool = False):
+                       image=None, multiline=False, default_value: str = None, in_multiple: bool = False):
             """
             prompts the user to enter text
 
@@ -392,7 +412,7 @@ class Dialog:
     else:
         @staticmethod
         async def number(prompt: str = None, title: str = "Number Input", image=None,
-                         default_value: typing.Union[int, float] = None,in_multiple: bool = False):
+                         default_value: typing.Union[int, float] = None, in_multiple: bool = False):
             """
             prompts the user to input a number
 
@@ -640,4 +660,4 @@ class Dialog:
     else:
         @staticmethod
         async def multiple(title: str, components: list):
-           return components
+            return components

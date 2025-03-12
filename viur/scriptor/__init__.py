@@ -10,7 +10,7 @@ from requests.exceptions import ConnectionError
 from .directory_handler import DirectoryHandler
 from .progressbar import ProgressBar
 
-__version__ = '1.0.2.0'
+__version__ = '1.0.2.1'
 
 
 def version():
