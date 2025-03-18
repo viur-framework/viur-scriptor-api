@@ -1,6 +1,7 @@
 import json
 from copy import deepcopy
 from itertools import chain
+from typing import Literal
 
 from .module_parts import TreeModule
 from .file import File
@@ -156,6 +157,16 @@ def _pre_extract_with_strategy(prepared_data_for_preextraction, pre_extraction_s
     return res
 
 
+def _pre_extract_fields_from_using(using_fields_for_single_record):
+    res = {}
+    for key, value in using_fields_for_single_record:
+        base_key, *suffix = key.split('.')
+        if base_key not in res:
+            res[base_key] = []
+        res[base_key].append((key, value))
+    return res
+
+
 def _extractor_for_simple_bones(key, conversion_function=str, **kwargs):
     def extractor_for_simple_bones(data):
         yield key, conversion_function(data[key])
@@ -213,7 +224,7 @@ def _extractor_for_relational_bones(key, bone_structure):
 
     if languages:
         if bone_multi:
-            def extractor_for_multiple_translated_relational_bones(data):  ## RECURSIVE DONE
+            def extractor_for_multiple_translated_relational_bones(data):
                 if using:
                     d = dict(data[key])
                     for lang in languages:
@@ -253,7 +264,7 @@ def _extractor_for_relational_bones(key, bone_structure):
             return extractor_for_multiple_translated_relational_bones
         else:
 
-            def extractor_for_translated_relational_bones(data):  ## RECURSIVE DONE
+            def extractor_for_translated_relational_bones(data):
                 d = dict(data[key])
                 if using:
                     for lang in languages:
@@ -280,7 +291,7 @@ def _extractor_for_relational_bones(key, bone_structure):
             return extractor_for_translated_relational_bones
     else:
         if bone_multi:
-            def extractor_for_multiple_relational_bones(data):  ## RECURSIVE DONE
+            def extractor_for_multiple_relational_bones(data):
                 if using:
                     extracted = dict(_get_key_value_pairs_by_prefix_trucated(dict(data)[key], key))
                     indexes = set()
@@ -313,7 +324,7 @@ def _extractor_for_relational_bones(key, bone_structure):
 
             return extractor_for_multiple_relational_bones
         else:
-            def extractor_for_simple_relational_bones(data):  ## RECURSIVE DONE
+            def extractor_for_simple_relational_bones(data):
                 if using:
                     try:
                         val = dict(data[key])[f"""{key}.dest.key"""]
@@ -337,6 +348,110 @@ def _extractor_for_relational_bones(key, bone_structure):
                         yield key, ''
 
             return extractor_for_simple_relational_bones
+
+
+def _extractor_for_record_bones(key, bone_structure):
+    bone_multi = bone_structure["multiple"]
+    languages = bone_structure["languages"]
+    using = bone_structure["using"]
+    using_pre_extraction_strategy = _generate_pre_extraction_strategy({"structure": using})
+    using_extractor_strategy = _generate_extraction_strategy({"structure": using}, 'using')
+
+    if bone_multi:
+        if languages:
+            def extractor_for_translated_multiple_record_bones(data):
+                d = dict(data[key])
+                for lang in languages:
+                    is_none = True
+                    lang_fields = dict(
+                        _get_key_value_pairs_by_prefix_trucated(
+                            d.items(), f"""{key}.{lang}"""))
+                    indexes = set()
+                    for k, v in lang_fields.items():
+                        indexes.add(int(k.split('.', maxsplit=1)[0]))
+                    for i in indexes:
+                        using_fields = dict(
+                            _get_key_value_pairs_by_prefix_trucated(lang_fields.items(), f"""{i}"""))
+                        if not any(using_fields.values()):
+                            continue
+                        packed_using_fields = _pack_subkeys(using_fields)
+                        extracted_using = _extract_with_strategy([packed_using_fields], using_extractor_strategy)
+                        final_using = [sum(d.values(), start=[]) for d in extracted_using][0]
+                        for k, v in final_using:
+                            is_none = False
+                            yield f"""{key}.{lang}.{i}.{k}""", v
+                    if is_none:
+                        yield f"""{key}.{lang}""", ""
+
+            return extractor_for_translated_multiple_record_bones
+        else:
+            def extractor_for_multiple_record_bones(data):
+                d = data[key]
+                extracted = dict(_get_key_value_pairs_by_prefix_trucated(d, key))
+                indexes = set()
+                for k, v in extracted.items():
+                    indexes.add(int(k.split('.', maxsplit=1)[0]))
+                is_none = True
+                for i in sorted(indexes):
+                    using_fields = dict(
+                        _get_key_value_pairs_by_prefix_trucated(extracted.items(), f"""{i}"""))
+                    if not any(using_fields.values()):
+                        continue
+                    packed_using_fields = _pack_subkeys(using_fields)
+                    extracted_using = _extract_with_strategy([packed_using_fields], using_extractor_strategy)
+                    final_using = [sum(d.values(), start=[]) for d in extracted_using][0]
+                    for k, v in final_using:
+                        is_none = False
+                        yield f"""{key}.{i}.{k}""", v
+                if is_none:
+                    yield key, ''
+
+            return extractor_for_multiple_record_bones
+    else:
+        if languages:
+            def extractor_for_translated_record_bones(data):
+                d = dict(data[key])
+                is_none = True
+                for lang in languages:
+                    lang_fields = dict(
+                        _get_key_value_pairs_by_prefix_trucated(
+                            d.items(), f"""{key}.{lang}"""))
+                    if not any(lang_fields.values()):
+                        continue
+                    packed_lang_fields = _pack_subkeys(lang_fields)
+                    extracted_lang = _extract_with_strategy([packed_lang_fields], using_extractor_strategy)
+                    final_lang = [sum(d.values(), start=[]) for d in extracted_lang][0]
+                    for k, v in final_lang:
+                        is_none = False
+                        yield f"""{key}.{lang}.{k}""", v
+                if is_none:
+                    yield f"""{key}.{lang}""", ""
+
+            return extractor_for_translated_record_bones
+        else:
+            def extractor_for_simple_record_bones(data):
+                d = dict(data[key])
+                if not any(v for k, v in d.items() if k.startswith(f"{key}.")):
+                    yield key, ''
+                    return
+                initial_prepared_data_for_preextraction = _prepare_for_preextraction(d)
+                second_prepared_data_for_preextraction = _get_key_value_pairs_by_prefix_trucated(
+                    initial_prepared_data_for_preextraction[key], key)
+                final_prepared_data_for_preextraction = _pre_extract_fields_from_using(
+                    second_prepared_data_for_preextraction)
+                pre_extracted_data_item = _pre_extract_with_strategy(final_prepared_data_for_preextraction,
+                                                                     using_pre_extraction_strategy)
+                extracted_data = _extract_with_strategy([pre_extracted_data_item], using_extractor_strategy)
+                final_using = [sum(d.values(), start=[]) for d in extracted_data][0]
+                for k, v in final_using:
+                    yield f"""{key}.{k}""", v
+
+            return extractor_for_simple_record_bones
+
+    def dummy(*args, **kwargs):
+        yield key, "NOT IMPLEMENTED"
+
+    return dummy
 
 
 _extractable_with_default_strategy_types = {  # this is a set, not a dict
@@ -393,6 +508,8 @@ def _generate_extraction_strategy(structure, module_type_name):
             # start of non-default-bones
         elif bone_type.startswith("relational"):
             extraction_strategy[bone_name] = _extractor_for_relational_bones(bone_name, bone_structure)
+        elif bone_type.startswith("record"):
+            extraction_strategy[bone_name] = _extractor_for_record_bones(bone_name, bone_structure)
 
         if bone_name not in extraction_strategy:
             raise NotImplementedError(
@@ -468,11 +585,25 @@ def _do_nothing(*args, **kwargs):
     pass
 
 
+def _pack_subkeys(data):
+    res = {}
+    for full_key, v in data.items():
+        k, *suffix = full_key.split('.', maxsplit=1)
+        if suffix:
+            if k not in res or (isinstance(res[k], str) and not res[k]):
+                res[k] = {}
+            res[k][full_key] = v
+        elif v:
+            res[k] = v
+    return res
+
+
 async def import_from_table(
         table_as_dicts,
         module,
         structure=None,
         *,
+        add_or_edit_mode: Literal["edit", "add_or_edit", "add"] = "edit",
         tree_skel_type=None,
         dry_run=False,
         progress_callback=None,
@@ -490,7 +621,7 @@ async def import_from_table(
         server_result_callback = _do_nothing
     if isinstance(module, TreeModule):
         if tree_skel_type is None:
-            raise ValueError('''For TreeModules you need to specify the tree_skel_type(either "leaf" or "node").''')
+            raise ValueError('''For TreeModules you need to specify the tree_skel_type (either "leaf" or "node").''')
         elif tree_skel_type not in ["leaf", "node"]:
             raise ValueError('''The tree_skel_type needs to be either "leaf" or "node".''')
     else:
@@ -511,6 +642,11 @@ async def import_from_table(
     extracted_data = _extract_with_strategy(pre_extracted_data, extraction_strategy)
     data_prepared_for_db = [sum(d.values(), start=[]) for d in extracted_data]
     total_number_of_items = len(data_prepared_for_db)
+    add_or_edit_function = {
+        "edit": module.edit,
+        "add_or_edit": module.add_or_edit,
+        "add": module.add
+    }[add_or_edit_mode]
     for index, writable_entry in enumerate(data_prepared_for_db):
         progress_callback(index=index, total=total_number_of_items)
         edit_params = {
@@ -521,10 +657,13 @@ async def import_from_table(
             edit_params["skel_type"] = tree_skel_type
 
         query_params_callback(edit_params)
-        if not dry_run:
-            res = "something unexpected went wrong"
+        if dry_run:
+            server_result_callback({"action": "dry_run"})
+        else:
+            res = {"action": "something unexpected went wrong"}
             try:
-                res = await module.add_or_edit(**edit_params)
+                res = await add_or_edit_function(**edit_params)
             except Exception as e:
                 exception_callback(e, edit_params)
+                res = {"action": f"""{type(e).__name__}: {'\n'.join(e.args)}"""}
             server_result_callback(res)
