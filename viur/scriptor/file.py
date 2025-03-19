@@ -2,6 +2,7 @@ import json
 import zipfile
 import chardet
 import magic
+import typing as t
 from openpyxl.reader.excel import ExcelReader
 from io import BytesIO, StringIO
 import csv
@@ -227,12 +228,40 @@ class File(FileBase):
         return chardet.detect_all(self._data)
 
 
-
-
 class ZipFile(FileBase):
-    def __init__(self, filename: str):
-        super().__init__(BytesIO(),filename)
+    def __init__(self, filename: str, mode: t.Literal['r', 'w', 'x', 'a'] = 'a'):
+        super().__init__(BytesIO(), filename)
+        self.mode = mode
 
     def add(self, file: File):
-        with zipfile.ZipFile(self._data, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+        """
+        Adds a file to the zip archive
+        """
+        with self.zip_file as zip_file:
            zip_file.writestr(file.get_filename(), file.as_text())
+
+    @property
+    def zip_file(self):
+        """
+        Create an instance form a zipfile.ZipFile with the contents of self._data and return it
+        :return: zipfile.ZipFile instance
+        """
+        return zipfile.ZipFile(self._data, self.mode, zipfile.ZIP_DEFLATED)
+
+    def infolist(self):
+        """
+        Proxy function for ``zipfile.ZipFile.infolist``
+        """
+        return self.zip_file.infolist()
+
+    def namelist(self):
+        """
+        Proxy function for ``zipfile.ZipFile.namelist``
+        """
+        return self.zip_file.namelist()
+
+    def printdir(self):
+        """
+        Proxy function for ``zipfile.ZipFile.namelist``
+        """
+        return self.zip_file.printdir()
