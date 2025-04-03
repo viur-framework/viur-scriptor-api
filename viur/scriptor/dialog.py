@@ -654,8 +654,11 @@ class Dialog:
                 "components": json.dumps(components)
             }
             js.self.postMessage(**msg)
-            rest = await _wait_for_result()
-            return json.loads(rest)
+            res = await _wait_for_result()
+            if isinstance(res,str):
+                return json.loads(res)
+            else:
+                return res.to_py()
 
     else:
         @staticmethod
