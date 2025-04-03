@@ -33,9 +33,12 @@ if is_pyodide_context():
     async def _wait_for_result():
         while manager.resultValue is None:
             await manager.sleep(250)
+
         res = manager.resultValue
         manager.reset()
         manager.resultValue = None
+        if isinstance(res,pyodide.ffi.JsProxy):
+            return res.to_py()
         return res
 
 
