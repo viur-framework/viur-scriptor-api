@@ -539,6 +539,10 @@ def export_to_table(data, structure, filename="export.csv"):
     return csv_file
 
 
+def export_to_json(data, structure, filename="export.json"):
+    return File(json.dumps(_format_for_table(data, structure), indent=4, sort_keys=True).encode(), filename)
+
+
 def generate_key_replacement_mapping(table_header_keys, replacekeys):
     replace_bone_name_mapping = {}
     for table_header_key in table_header_keys:
