@@ -34,6 +34,9 @@ if is_pyodide_context():
         while manager.resultValue is None:
             await manager.sleep(250)
         res = manager.resultValue
+        if res == "__exit__":
+            import sys
+            sys.exit(0)
         manager.reset()
         manager.resultValue = None
         return res
