@@ -489,8 +489,8 @@ def _generate_extraction_strategy(structure, module_type_name):
             params["result_keys"] = ["node", "parententry"]
             extraction_strategy[bone_name] = _extractor_for_renamed_simple_bones(**params)
             continue
-        elif bone_name not in ["key", "parentrepo"] and bone_structure["readonly"]:
-            continue
+        # elif bone_name not in ["key", "parentrepo"] and bone_structure["readonly"]:
+        #     continue
         elif bone_type in _extractable_with_default_strategy_types or any(
                 bone_type.startswith(i) for i in _extractable_with_default_strategy_type_prefixes):
             # default strategy

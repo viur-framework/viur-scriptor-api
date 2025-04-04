@@ -654,9 +654,15 @@ class Dialog:
                 "title": title,
                 "components": json.dumps(components)
             }
-            if not reuse:
+
+
+             if not reuse:
                 js.self.postMessage(**msg)
-            return json.loads(await _wait_for_result())
+            res = await _wait_for_result()
+            if isinstance(res,str):
+                return json.loads(res)
+            else:
+                return res.to_py()
 
     else:
         @staticmethod
