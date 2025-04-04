@@ -1,6 +1,8 @@
 import json
+import zipfile
 import chardet
 import magic
+import typing as t
 from openpyxl.reader.excel import ExcelReader
 from io import BytesIO, StringIO
 import csv
@@ -8,7 +10,78 @@ from ._utils import list_table_to_dict_table, normalize_table, list_to_excel, li
 from .dialog import Dialog
 
 
-class File:
+class FileBase:
+    def __init__(self, data: bytes | BytesIO, filename: str = None):
+        assert isinstance(data, (bytes, BytesIO))
+        assert isinstance(filename, str)
+        self._data = data
+        self.filename = filename
+
+    def __repr__(self):
+        return f"""<{self.__class__.__name__} filename="{self.filename}", size={len(self._data)}>"""
+
+    def get_filename(self):
+        """
+        returns the name of the file
+
+        :return: name of the file
+        """
+        return self.filename
+
+    def get_size(self):
+        """
+        returns the size of the files data in bytes
+
+        :return: the size of the files data in bytes
+        """
+        return len(self._data.getvalue() if isinstance(self._data, BytesIO) else self._data)
+
+    def as_bytes(self):
+        """
+        returns the content of the file as ``bytes``
+
+        :return: file-data
+        """
+        return self._data.getvalue() if isinstance(self._data, BytesIO) else self._data
+
+    def as_text(self, encoding: str = None):
+        """
+        decodes the whole content of the file as a string and returns it
+
+        :param encoding: (optional) if set, the content of the file is decoded using this encoding, otherwise the
+        encoding is automatically guessed
+        :return: content of the file as a ``string``
+        """
+        data = self._data.getvalue() if isinstance(self._data, BytesIO) else self._data
+        if encoding is None:
+            encoding = self.guess_text_encoding()['encoding']
+        return data.decode(encoding)
+
+    async def save_dialog(self, prompt: str = "Please select a file to save to:"):
+        """
+        asks the user where to save the file and saves it
+
+        :param prompt: (optional) the prompt the user will read
+        """
+        data = self._data.getvalue() if isinstance(self._data, BytesIO) else self._data
+        await Dialog._save_file_dialog(prompt=prompt, data=data)
+
+    @classmethod
+    async def open_dialog(cls, prompt: str = "Please select a file to open:"):
+        """
+        asks the user for a file to open
+
+        :param prompt: (optional) the prompt the user will read
+        :return: ``File``-object
+        """
+        return await Dialog._open_file_dialog(prompt=prompt)
+
+    def download(self):
+        data = self._data.getvalue() if isinstance(self._data, BytesIO) else self._data
+        save_file(data = data, filename = self.filename)
+
+
+class File(FileBase):
     """
     Represents an opened file or data. Used to open files from the user or build files for the user to download.
 
@@ -23,12 +96,7 @@ class File:
     }
 
     def __init__(self, data: bytes, filename: str = None):
-        assert isinstance(data, bytes)
-        self._data = data
-        self.filename = filename
-
-    def __repr__(self):
-        return f"""<{self.__class__.__name__} filename="{self.filename}", size={len(self._data)}>"""
+        super().__init__(data,filename)
 
     @classmethod
     def from_string(cls, text: str, filename: str = 'text.txt'):
@@ -75,41 +143,6 @@ class File:
         else:
             raise ValueError("Only .csv and .xlsx are supported file extensions.")
         return File(data=data, filename=filename)
-
-    def get_filename(self):
-        """
-        returns the name of the file
-
-        :return: name of the file
-        """
-        return self.filename
-
-    def get_size(self):
-        """
-        returns the size of the files data in bytes
-
-        :return: the size of the files data in bytes
-        """
-        return len(self._data)
-
-    def as_bytes(self):
-        """
-        returns the content of the file as ``bytes``
-
-        :return: file-data
-        """
-        return self._data
-
-    def as_text(self, encoding: str = None):
-        """
-        decodes the whole content of the file as a string and returns it
-
-        :param encoding: (optional) if set, the content of the file is decoded using this encoding, otherwise the encoding is automatically guessed
-        :return: content of the file as a ``string``
-        """
-        if encoding is None:
-            encoding = self.guess_text_encoding()['encoding']
-        return self._data.decode(encoding)
 
     def as_object_from_json(self):
         """
@@ -194,26 +227,41 @@ class File:
         """
         return chardet.detect_all(self._data)
 
-    async def save_dialog(self, prompt: str = "Please select a file to save to:"):
-        """
-        asks the user where to save the file and saves it
 
-        :param prompt: (optional) the prompt the user will read
-        """
-        await Dialog._save_file_dialog(prompt=prompt, data=self._data)
+class ZipFile(FileBase):
+    def __init__(self, filename: str, mode: t.Literal['r', 'w', 'x', 'a'] = 'a'):
+        super().__init__(BytesIO(), filename)
+        self.mode = mode
 
-    @classmethod
-    async def open_dialog(cls, prompt: str = "Please select a file to open:"):
+    def add(self, file: File):
         """
-        asks the user for a file to open
+        Adds a file to the zip archive
+        """
+        with self.zip_file as zip_file:
+           zip_file.writestr(file.get_filename(), file.as_text())
 
-        :param prompt: (optional) the prompt the user will read
-        :return: ``File``-object
+    @property
+    def zip_file(self):
         """
-        return await Dialog._open_file_dialog(prompt=prompt)
+        Create an instance form a zipfile.ZipFile with the contents of self._data and return it
+        :return: zipfile.ZipFile instance
+        """
+        return zipfile.ZipFile(self._data, self.mode, zipfile.ZIP_DEFLATED)
 
-    def download(self):
+    def infolist(self):
         """
-        downloads the file to the users download-directory
+        Proxy function for ``zipfile.ZipFile.infolist``
         """
-        save_file(data=self._data, filename=self.filename)
+        return self.zip_file.infolist()
+
+    def namelist(self):
+        """
+        Proxy function for ``zipfile.ZipFile.namelist``
+        """
+        return self.zip_file.namelist()
+
+    def printdir(self):
+        """
+        Proxy function for ``zipfile.ZipFile.namelist``
+        """
+        return self.zip_file.printdir()
