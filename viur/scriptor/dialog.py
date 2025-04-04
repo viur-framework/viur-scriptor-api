@@ -656,7 +656,7 @@ class Dialog:
             }
 
 
-             if not reuse:
+            if not reuse:
                 js.self.postMessage(**msg)
             res = await _wait_for_result()
             if isinstance(res,str):
