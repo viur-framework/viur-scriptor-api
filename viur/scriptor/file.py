@@ -53,6 +53,18 @@ class File:
         return File(data=data, filename=filename)
 
     @classmethod
+    async def from_url(cls, url: str, filename: str = 'text.txt'):
+        """
+        creates a binary file from ``bytes``
+        :param url: ``str`` the url where the file can be downloaded from
+        :param filename: name the file should have
+        :return: ``File``-object
+        """
+        from .requests import WebRequest
+        response = await WebRequest.get(url=url)
+        return File(data=response.get_content(), filename=filename)
+
+    @classmethod
     def from_table(cls, table: list[list[str, ...]] | list[dict[str, str]], header: list[str] = None,
                    filename: str = "table.xlsx", fill_empty: bool = False, auto_str: bool = False, csv_delimiter=','):
         """
