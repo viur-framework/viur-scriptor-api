@@ -290,11 +290,17 @@ if is_pyodide_context():
         return blob
 
 if is_pyodide_context():
-    def clear_console():
+    def clear_console(length=0):
+        """
+            A helper function to clear console output.
+            :param length: the length of the console output
+            :return: None
+        """
         js.self.postMessage(
-            type="clear"
+            type="clear",
+            length=length
         )
 else:
-    def clear_console():
+    def clear_console(length=0):
         os.system('cls' if os.name == 'nt' else 'clear')
 
