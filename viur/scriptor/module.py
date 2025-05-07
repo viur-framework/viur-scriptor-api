@@ -3,6 +3,7 @@ import requests
 from urllib.parse import urlencode as _urlencode
 
 from .module_parts import BaseModule, ListModule, TreeModule, SingletonModule, Method
+from .http_errors import get_exception_by_code,HTTPException
 from ._utils import join_url
 from .requests import WebRequest
 from ._utils import is_pyodide_context, flatten_dict
@@ -205,7 +206,10 @@ class Modules:
             errormessage = f"""Request of type "{method}" for URL "{url}" returned with status-code {response.get_status_code()}"""
             if responsedata and all(key in responsedata for key in ["reason", "descr"]):
                 errormessage = f"""{errormessage}\n\nreason: {responsedata["reason"]}\ndescription:\n{responsedata["descr"]}"""
-            raise RuntimeError(errormessage)
+            if exception := get_exception_by_code(response.get_status_code()):
+                raise exception(errormessage,response)
+            else:
+                raise HTTPException(response.get_status_code(), "Http Error", errormessage,response)
         try:
             return response.as_object_from_json()
         except json.JSONDecodeError:
