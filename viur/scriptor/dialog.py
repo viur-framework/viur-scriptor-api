@@ -651,17 +651,21 @@ class Dialog:
 
     if is_pyodide_context():
         @staticmethod
-        async def multiple(title: str, components: list):
+        async def multiple(title: str, components: list, reuse: bool = False):
             """
             :param title: the header of the component
             :param components: list of components
+            :param reuse: If True, the components are not sent to the JS.
             """
             msg = {
                 "type": "multiple-dialog",
                 "title": title,
                 "components": json.dumps(components)
             }
-            js.self.postMessage(**msg)
+
+
+            if not reuse:
+                js.self.postMessage(**msg)
             res = await _wait_for_result()
             if isinstance(res,str):
                 return json.loads(res)
@@ -670,5 +674,5 @@ class Dialog:
 
     else:
         @staticmethod
-        async def multiple(title: str, components: list):
+        async def multiple(title: str, components: list, reuse: bool = False):
             return components
