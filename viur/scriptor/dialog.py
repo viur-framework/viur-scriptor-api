@@ -651,15 +651,17 @@ class Dialog:
 
     if is_pyodide_context():
         @staticmethod
-        async def multiple(title: str, components: list, reuse: bool = False):
+        async def multiple(title: str, components: list, send_button_text: str, reuse: bool = False):
             """
             :param title: the header of the component
             :param components: list of components
+            :param send_button_text: the text of the button at the bottom of the dialog
             :param reuse: If True, the components are not sent to the JS.
             """
             msg = {
                 "type": "multiple-dialog",
                 "title": title,
+                "buttonText": send_button_text,
                 "components": json.dumps(components)
             }
 
