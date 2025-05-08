@@ -233,7 +233,8 @@ class Dialog:
             if default_value:
                 assert isinstance(default_value, (list, str)), "pre_selected must be a list or a string."
                 if not multiselect:
-                    assert len(default_value) == 1, "Pre-selected can only have one option in not multiselect."
+                    if isinstance(default_value, list):
+                        assert len(default_value) == 1, "Pre-selected can only have one option in not multiselect."
 
             title = title or "Select"
             text = text or ("Please select any options:" if multiselect else "Please select an option:")
