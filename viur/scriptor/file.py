@@ -71,7 +71,7 @@ class File:
         if file_suffix == "xlsx":
             data = list_to_excel(normalized_table)
         elif file_suffix == "csv":
-            data = list_to_csv(normalized_table, delimiter=csv_delimiter).encode('UTF-8')
+            data = list_to_csv(normalized_table, delimiter=csv_delimiter).encode()
         else:
             raise ValueError("Only .csv and .xlsx are supported file extensions.")
         return File(data=data, filename=filename)
