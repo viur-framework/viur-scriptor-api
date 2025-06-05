@@ -148,8 +148,18 @@ class Dialog:
 
     if is_pyodide_context():
         @staticmethod
-        async def _open_file_dialog(prompt=None):
-            js.self.postMessage(type="showOpenFilePicker")
+        async def _open_file_dialog(prompt=None, types=[]):
+            """
+            Shown an open file dialog for the user.
+
+            :param prompt: unused
+            :param types: Types of files like in
+            https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#examples
+            """
+            js.self.postMessage(
+                type="showOpenFilePicker",
+                types=pyodide.ffi.to_js(types, dict_converter=js.Object.fromEntries)
+            )
             res = await _wait_for_result()
             if res == -1:
                 raise RuntimeError("The user has cancelled the dialog.")
@@ -158,7 +168,7 @@ class Dialog:
             return _file.File.from_bytes(data=bytes, filename=file.name)
     else:
         @staticmethod
-        async def _open_file_dialog(prompt=None):
+        async def _open_file_dialog(prompt=None,types=[]):
             if prompt is None:
                 prompt = "Please enter a filename to open:"
             prompt += ' '
