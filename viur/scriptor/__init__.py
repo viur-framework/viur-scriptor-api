@@ -1,6 +1,6 @@
 from .requests import WebRequest, WebResponse
 from .dialog import Dialog
-from .file import File
+from .file import File, ZipFile
 from .logger import logger
 from .module import Modules
 from ._utils import is_pyodide_context, is_pyodide_in_browser, gather_async_iterator, clear_console
@@ -69,6 +69,7 @@ __all__ = [
     'map_extract_items',
     'ProgressBar',
     'version',
+    "ZipFile",
 ]
 
 if is_pyodide_context():
