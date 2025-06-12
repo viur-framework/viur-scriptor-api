@@ -203,14 +203,24 @@ class File:
         await Dialog._save_file_dialog(prompt=prompt, data=self._data)
 
     @classmethod
-    async def open_dialog(cls, prompt: str = "Please select a file to open:"):
+    async def open_dialog(cls, prompt: str = "Please select a file to open:", types: list[dict] = []):
         """
         asks the user for a file to open
-
         :param prompt: (optional) the prompt the user will read
+        :param types: Types of files
+        Example:
+        types= [
+            {
+                "description": "Images",
+                "accept":{
+                             "image/*": [".png", ".gif", ".jpeg", ".jpg"],
+                         },
+            }
+        ]
+        https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#examples
         :return: ``File``-object
         """
-        return await Dialog._open_file_dialog(prompt=prompt)
+        return await Dialog._open_file_dialog(prompt=prompt, types=types)
 
     def download(self):
         """

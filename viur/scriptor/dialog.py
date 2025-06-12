@@ -149,13 +149,6 @@ class Dialog:
     if is_pyodide_context():
         @staticmethod
         async def _open_file_dialog(prompt=None, types=[]):
-            """
-            Shown an open file dialog for the user.
-
-            :param prompt: unused
-            :param types: Types of files like in
-            https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#examples
-            """
             js.self.postMessage(
                 type="showOpenFilePicker",
                 types=pyodide.ffi.to_js(types, dict_converter=js.Object.fromEntries)
