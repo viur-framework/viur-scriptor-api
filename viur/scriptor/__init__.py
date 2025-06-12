@@ -3,6 +3,7 @@ from .dialog import Dialog
 from .file import File
 from .logger import logger
 from .module import Modules
+from .http_errors import *
 from ._utils import is_pyodide_context, is_pyodide_in_browser, gather_async_iterator, clear_console
 from .utils import extract_items, map_extract_items
 import os

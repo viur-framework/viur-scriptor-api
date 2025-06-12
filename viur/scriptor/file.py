@@ -53,6 +53,20 @@ class File:
         return File(data=data, filename=filename)
 
     @classmethod
+    async def from_url(cls, url: str, filename: str | None = None):
+        """
+        creates a binary file from ``bytes``
+        :param url: ``str`` the url where the file can be downloaded from
+        :param filename: name the file should have
+        :return: ``File``-object
+        """
+        from .requests import WebRequest
+        response = await WebRequest.get(url=url)
+        if filename is None:
+            filename = response.filename
+        return File(data=response.get_content(), filename=filename)
+
+    @classmethod
     def from_table(cls, table: list[list[str, ...]] | list[dict[str, str]], header: list[str] = None,
                    filename: str = "table.xlsx", fill_empty: bool = False, auto_str: bool = False, csv_delimiter=','):
         """
@@ -71,7 +85,7 @@ class File:
         if file_suffix == "xlsx":
             data = list_to_excel(normalized_table)
         elif file_suffix == "csv":
-            data = list_to_csv(normalized_table, delimiter=csv_delimiter).encode('UTF-8')
+            data = list_to_csv(normalized_table, delimiter=csv_delimiter).encode()
         else:
             raise ValueError("Only .csv and .xlsx are supported file extensions.")
         return File(data=data, filename=filename)
@@ -203,14 +217,24 @@ class File:
         await Dialog._save_file_dialog(prompt=prompt, data=self._data)
 
     @classmethod
-    async def open_dialog(cls, prompt: str = "Please select a file to open:"):
+    async def open_dialog(cls, prompt: str = "Please select a file to open:", types: list[dict] = []):
         """
         asks the user for a file to open
-
         :param prompt: (optional) the prompt the user will read
+        :param types: Types of files
+        Example:
+        types= [
+            {
+                "description": "Images",
+                "accept":{
+                             "image/*": [".png", ".gif", ".jpeg", ".jpg"],
+                         },
+            }
+        ]
+        https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#examples
         :return: ``File``-object
         """
-        return await Dialog._open_file_dialog(prompt=prompt)
+        return await Dialog._open_file_dialog(prompt=prompt, types=types)
 
     def download(self):
         """
