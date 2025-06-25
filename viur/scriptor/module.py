@@ -156,7 +156,7 @@ class Modules:
         """
         return self._base_url
 
-    async def viur_request(self, method: str, url: str, params=None, renderer: str = None):
+    async def viur_request(self, method: str, url: str, params=None, renderer: str = None, raw: bool = False):
         """
         requests data from the viur server.
 
@@ -164,6 +164,7 @@ class Modules:
         :param url: the url of the requested resource
         :param params: additional parameters
         :param renderer: the viur-renderer for the requested data
+        :param raw: if true the raw response will be returned
         :return: the requested data renderd by the renderer
         """
         method = method.upper()
@@ -197,6 +198,8 @@ class Modules:
         kwargs = self._viur_request_kwargs_collector(data=(data if method != "GET" else None))
 
         response = await WebRequest.request(method, url, **kwargs)
+        if raw:
+            return response
         if response.get_status_code() < 200 or response.get_status_code() >= 300:
             responsedata = False
             try:

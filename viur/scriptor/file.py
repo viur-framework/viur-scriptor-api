@@ -60,8 +60,8 @@ class File:
         :param filename: name the file should have
         :return: ``File``-object
         """
-        from .requests import WebRequest
-        response = await WebRequest.get(url=url)
+        from . import modules
+        response = await modules.viur_request('GET', url, raw=True)
         if filename is None:
             filename = response.filename
         return File(data=response.get_content(), filename=filename)
