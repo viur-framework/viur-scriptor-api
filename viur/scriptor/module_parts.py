@@ -147,7 +147,8 @@ class SingletonModule(BaseModule):
 
 
 class ExtendedModule(BaseModule):
-    async def list(self, params: dict = None, group: str = "", skel_type: str = "", **kwargs):
+    async def list(self, params: dict = None, group: str = "", skel_type: str = "", limit: int = None, **kwargs):
+        print(f"ListModule.list({params=}, group={group}, {skel_type=}, kwargs={kwargs})")
         if not params:
             params = {}
 
@@ -162,10 +163,6 @@ class ExtendedModule(BaseModule):
                 _url.append(group)
             _url = join_url(_url)
 
-        limit = None
-        if "limit" in params:
-            limit = params["limit"]
-
         batch = []
         cursor = None
         fetched = False
@@ -175,8 +172,8 @@ class ExtendedModule(BaseModule):
             for i in batch:
                 yield i
                 counter += 1
-            if limit and counter >= limit:
-                return
+                if limit and counter >= limit:
+                    return
             if fetched and not cursor:
                 return
             if cursor:
@@ -275,16 +272,19 @@ class ListModule(ExtendedModule):
         """
         return await super().add_or_edit(key=key, params=params, group=group, **kwargs)
 
-    async def list(self, params: dict = None, group: str = "", **kwargs):
+    async def list(self, params: dict = None, group: str = "", limit: int = None, **kwargs):
         """
         retrieves multiple records from the database (all if called without parameters)
 
         :param params: parameters to pass to the database
         :param group: the group the records belong to
+        :param limit: maximum amount of entries that should be fetched.
+            Note: The amount of entries per request/batch must be specified as "limit" in the params.
         :param kwargs: additional keyword-arguments
         :return: an asynchronous generator yielding the retrieved records
         """
-        async for i in super().list(params=params, group=group, **kwargs):
+        print(f"ListModule.list({params=}, group={group}, kwargs={kwargs})")
+        async for i in super().list(params=params, group=group, limit=limit, **kwargs):
             yield i
 
     async def add(self, params: dict = None, group: str = "", **kwargs):
@@ -409,16 +409,18 @@ class TreeModule(ExtendedModule):
         """
         return await super().edit(key=key, params=params, skel_type=skel_type, **kwargs)
 
-    async def list(self, params: dict = None, skel_type: str = "", **kwargs):
+    async def list(self, params: dict = None, skel_type: str = "", limit: int = None, **kwargs):
         """
         retrieves multiple records from the database (all if called without parameters)
 
         :param params: parameters to pass to the database
         :param skel_type: the skel_type of the record (either "node" or "leaf")
+        :param limit: maximum amount of entries that should be fetched.
+            Note: The amount of entries per request/batch must be specified as "limit" in the params.
         :param kwargs: additional keyword-arguments
         :return: an asynchronous generator yielding the retrieved records
         """
-        async for i in super().list(params=params, skel_type=skel_type, **kwargs):
+        async for i in super().list(params=params, skel_type=skel_type, limit=limit, **kwargs):
             yield i
 
     async def add(self, params: dict = None, skel_type: str = "", **kwargs):
