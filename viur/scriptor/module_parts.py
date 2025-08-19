@@ -148,7 +148,6 @@ class SingletonModule(BaseModule):
 
 class ExtendedModule(BaseModule):
     async def list(self, params: dict = None, group: str = "", skel_type: str = "", limit: int = None, **kwargs):
-        print(f"ListModule.list({params=}, group={group}, {skel_type=}, kwargs={kwargs})")
         if not params:
             params = {}
 
@@ -283,7 +282,6 @@ class ListModule(ExtendedModule):
         :param kwargs: additional keyword-arguments
         :return: an asynchronous generator yielding the retrieved records
         """
-        print(f"ListModule.list({params=}, group={group}, kwargs={kwargs})")
         async for i in super().list(params=params, group=group, limit=limit, **kwargs):
             yield i
 
