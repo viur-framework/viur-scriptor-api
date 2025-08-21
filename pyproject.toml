@@ -45,5 +45,6 @@ packages = ["viur"]
 path = "viur/scriptor/__init__.py"
 
 [project.urls]
-"Homepage" = "https://github.com/viur-framework/viur-scriptor-api"
+"Documentation" = "https://viur-scriptor-api.readthedocs.io"
+"Repository" = "https://github.com/viur-framework/viur-scriptor-api"
 "Bug Tracker" = "https://github.com/viur-framework/viur-scriptor-api/issues"
