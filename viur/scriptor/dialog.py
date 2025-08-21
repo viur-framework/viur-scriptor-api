@@ -655,7 +655,12 @@ class Dialog:
 
     if is_pyodide_context():
         @staticmethod
-        async def multiple(title: str, components: list, send_button_text: str, reuse: bool = False):
+        async def multiple(
+            title: str,
+            components: list[dict] | dict[str, dict],
+            send_button_text: str,
+            reuse: bool = False
+        ):
             """
             :param title: the header of the component
             :param components: list of components
