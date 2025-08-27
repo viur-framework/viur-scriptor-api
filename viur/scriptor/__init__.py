@@ -28,13 +28,15 @@ if is_pyodide_context():
     async def _init_modules():
         global modules
         global params
-        modules = Modules(config.BASE_URL, None, None)
-        await modules.init()
         try:
             import manager
             params = manager.params.to_py()
+            if "__is_dev__" not in params:
+                params["__is_dev__"] = True
         except ModuleNotFoundError:
             pass
+        modules = Modules(config.BASE_URL, None, None)
+        await modules.init()
         return True
 else:
     async def _init_modules(base_url=None, username=None, password=None, login_skey=None, script_params=None):

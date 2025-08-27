@@ -1,7 +1,6 @@
 import traceback
 import requests
 from urllib.parse import urlencode as _urlencode
-
 from .module_parts import BaseModule, ListModule, TreeModule, SingletonModule, Method
 from .http_errors import get_exception_by_code,HTTPException
 from ._utils import join_url
@@ -220,10 +219,13 @@ class Modules:
 
     if is_pyodide_context():
         def _viur_request_kwargs_collector(self, data=None):
+            from . import params
             kwargs = {
                 "headers": {"Accept": "application/json, text/plain, */*"},
-                "credentials": "include"
+
             }
+            if params.get("__is_dev__"):
+                kwargs["credentials"] = "include"
             if data:
                 if isinstance(data, dict):
                     raw_fd = flatten_dict(data)
