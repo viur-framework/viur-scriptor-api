@@ -209,9 +209,14 @@ class Dialog:
 
     if is_pyodide_context():
         @staticmethod
-        async def select(options: dict[str, str] | list[str] | tuple[str], title: str = None, text: str = None,
-                         multiselect: bool = False, image=None, default_value: list[str] | str = None,
-                         in_multiple: bool = False):
+        async def select(
+            options: dict[str, str] | list[str] | tuple[str],
+            title: str = None, text: str = None,
+            multiselect: bool = False, image=None,
+            default_value: list[str] | str = None,
+            in_multiple: bool = False,
+            show_values: bool = False,
+        ):
             """
             Gives the user a choice between different options.
             If multiselect is False, only one selection is allowed, otherwise the user can select multiple options.
@@ -221,8 +226,9 @@ class Dialog:
             :param text: the text to be displayed
             :param multiselect: if True, multiple options can be selected, otherwise only one
             :param image: displays an image in the select-box
-            :param in_multiple: If true only the config of the Dialog is returned
             :param default_value: The default value for the options.
+            :param in_multiple: If true only the config of the Dialog is returned
+            :param show_values: If true the values show in the select-box
             :return: a ``tuple`` of the selected options
             """
             if isinstance(options, dict):
@@ -249,7 +255,8 @@ class Dialog:
                     "choices": choices,
                     "multiple": multiselect,
                     "image": image,
-                    "default_value": default_value
+                    "default_value": default_value,
+                    "show_values": show_values,
                 }
             js.self.postMessage(
                 type="select",
@@ -258,7 +265,8 @@ class Dialog:
                 choices=pyodide.ffi.to_js(choices, dict_converter=js.Object.fromEntries),
                 multiple=multiselect,
                 image=image,
-                default_value=default_value
+                default_value=default_value,
+                show_values= show_values,
             )
             if multiselect:
                 return [choices[i] for i in (await _wait_for_result())]
@@ -266,9 +274,14 @@ class Dialog:
                 return choices[await _wait_for_result()]
     else:
         @staticmethod
-        async def select(options: dict[str, str] | list[str] | tuple[str], title: str = None, text: str = None,
-                         multiselect: bool = False, image=None, in_multiple: bool = False,
-                         default_value: list[str] | str = None):
+        async def select(
+            options: dict[str, str] | list[str] | tuple[str],
+            title: str = None, text: str = None,
+            multiselect: bool = False, image=None,
+            default_value: list[str] | str = None,
+            in_multiple: bool = False,
+            show_values: bool = False,
+        ):
             """
             Gives the user a choice between different options.
             If multiselect is False, only one selection is allowed, otherwise the user can select multiple options.
@@ -278,8 +291,10 @@ class Dialog:
             :param text: the text to be displayed
             :param multiselect: if True, multiple options can be selected, otherwise only one
             :param image: displays an image in the select-box
-            :in_multiple: Just for testing purposes.
-            :in_multiple: Just for testing purposes.
+            :param default_value: Just for testing purposes
+            :param in_multiple: Just for testing purposes
+            :param show_values: Just for testing purposes
+
             :return: a ``tuple`` of the selected options
             """
             if isinstance(options, dict):
