@@ -30,6 +30,16 @@ class File:
     def __repr__(self):
         return f"""<{self.__class__.__name__} filename="{self.filename}", size={len(self._data)}>"""
 
+    def append(self, data: bytes | str):
+        """
+        Appends the data to the file.
+        :param data: The data to append.
+        """
+        if isinstance(data, bytes):
+            self._data += data
+        if isinstance(data, str):
+            self._data += str.encode(data)
+
     @classmethod
     def from_string(cls, text: str, filename: str = 'text.txt'):
         """
