@@ -4,20 +4,11 @@ if is_pyodide_context():
     import js
     from viur.scriptor._utils import _wait_for_result, bytes_to_blob
 else:
-    import os
     import prompt_toolkit
     from prompt_toolkit.completion import PathCompleter, FuzzyCompleter
-    from prompt_toolkit.validation import Validator, ValidationError
+    from ._validators import _FileDoesntExistsOrShouldBeReplacedValidator
 
 
-    class _FileDoesntExistsOrShouldBeReplacedValidator(Validator):
-        def validate(self, document):
-            text = document.text
-            if not text.strip():
-                raise ValidationError(message="Please enter a filename.")
-            if os.path.exists(text) and not text.endswith('!'):
-                raise ValidationError(
-                    message="This file already exists. If you want to replace it, add an exclamation-mark (!) at the end.")
 
 if is_pyodide_context():
     async def _save_file_dialog(data, prompt):

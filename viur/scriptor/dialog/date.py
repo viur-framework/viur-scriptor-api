@@ -8,25 +8,8 @@ if is_pyodide_context():
     from viur.scriptor._utils import _wait_for_result
 else:
     import prompt_toolkit
-    from prompt_toolkit.validation import Validator, ValidationError
+    from ._validators import _ConvertableValidator
 
-
-    class _ConvertableValidator(Validator):
-        def __init__(self, conversion_function, error_message=None):
-            super().__init__()
-            self._conversion_function = conversion_function
-            self._errormessage = error_message
-
-        def validate(self, document):
-            text = document.text
-            try:
-                self._conversion_function(text)
-            except Exception:
-                if self._errormessage is None:
-                    errormessage = "The format is not correct."
-                else:
-                    errormessage = self._errormessage
-                raise ValidationError(message=errormessage)
 if is_pyodide_context():
     async def date(prompt: str = None, use_time: bool = False, image=None,
                    default_value: typing.Union[str, datetime.date, datetime.datetime] = None):

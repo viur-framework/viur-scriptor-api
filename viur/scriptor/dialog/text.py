@@ -6,11 +6,8 @@ if is_pyodide_context():
     from viur.scriptor._utils import _wait_for_result
 else:
     import prompt_toolkit
-    from prompt_toolkit.validation import Validator, ValidationError
-    class _StringNotEmptyValidator(Validator):
-        def validate(self, document):
-            if not document.text:
-                raise ValidationError(message="You need to enter text. An empty string is not allowed.")
+    from ._validators import _StringNotEmptyValidator
+
 if is_pyodide_context():
 
     async def text(prompt: str = None, title: str = "Text Input", empty: bool = None, placeholder: str = None,

@@ -8,25 +8,7 @@ if is_pyodide_context():
     from viur.scriptor._utils import _wait_for_result
 else:
     import prompt_toolkit
-    from prompt_toolkit.validation import Validator, ValidationError
-
-
-    class _ConvertableValidator(Validator):
-        def __init__(self, conversion_function, error_message=None):
-            super().__init__()
-            self._conversion_function = conversion_function
-            self._errormessage = error_message
-
-        def validate(self, document):
-            text = document.text
-            try:
-                self._conversion_function(text)
-            except Exception:
-                if self._errormessage is None:
-                    errormessage = "The format is not correct."
-                else:
-                    errormessage = self._errormessage
-                raise ValidationError(message=errormessage)
+    from ._validators import _ConvertableValidator
 # todo placeholder
 if is_pyodide_context():
     async def number(prompt: str = None, title: str = "Number Input", image=None,
