@@ -142,17 +142,17 @@ def join_url(parts):
 if not is_pyodide_context():
     def _get_scriptor_default_save_directroy():
         if "SCRIPTOR_DEFAULT_SAVE_DIRECTORY" in os.environ:
-            p = pathlib.Path(os.environ["SCRIPTOR_DEFAULT_SAVE_DIRECTORY"])
+            path = pathlib.Path(os.environ["SCRIPTOR_DEFAULT_SAVE_DIRECTORY"])
         else:
-            p = pathlib.Path.home() / 'Scriptor_Downloads'
+            path = pathlib.Path.home() / 'Scriptor_Downloads'
             print(f"""Warning: No default directory for saving files set. You can define in the """
                   f"""environment-variable SCRIPTOR_DEFAULT_SAVE_DIRECTORY. Your files will be saved in {str(p)}.""")
-        if not p.exists():
-            p.mkdir(parents=True, exist_ok=True)
-        if p.is_dir():
-            return p
+        if not path.exists():
+            path.mkdir(parents=True, exist_ok=True)
+        if path.is_dir():
+            return path
         else:
-            raise ValueError(f"""The path "{str(p)}" is not valid.""")
+            raise ValueError(f"""The path "{str(path)}" is not valid.""")
 
 if is_pyodide_context():
     def save_file(data: bytes, filename: str = "file.bin"):
@@ -230,11 +230,11 @@ def stringify(data, max_depth=None):
             return res
         elif isinstance(data, dict):
             res = {}
-            for i in data.keys():
-                if isinstance(data[i], (list, tuple, dict)):
-                    res[str(i)] = stringify(data[i], max_depth=max_depth)
+            for key, value in data.items():
+                if isinstance(value, (list, tuple, dict)):
+                    res[key] = stringify(value, max_depth=max_depth)
                 else:
-                    res[str(i)] = str(data[i])
+                    res[key] = str(value)
             return res
     return str(data)
 
