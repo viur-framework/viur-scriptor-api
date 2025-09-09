@@ -2,8 +2,6 @@ from viur.scriptor._utils import is_pyodide_context
 import typing
 
 if is_pyodide_context():
-
-    import pyodide
     import js
     from viur.scriptor._utils import _wait_for_result
 else:
@@ -11,14 +9,14 @@ else:
     from ._validators import _ConvertableValidator
 # todo placeholder
 if is_pyodide_context():
-    async def number(prompt: str = None, title: str = "Number Input", image=None,
+    async def number(prompt: str = None, title: str = "Number Input", placeholder: str = None, image=None,
                      default_value: typing.Union[int, float] = None, in_multiple: bool = False):
         """
         prompts the user to input a number
 
         :param prompt: the prompt the user will be shown
         :param title: the title of the number-box
-        :param number_type: the type of expected number
+        :param placeholder: the placeholder-text to be displayed in the box while it is empty
         :param image: displays an image in the number-box
         :param default_value: optional default value
         :param in_multiple: If true only the config of the Dialog is returned
@@ -29,7 +27,8 @@ if is_pyodide_context():
             "title": title,
             "text": prompt,
             "input_type": 'number',
-            "image": image
+            "image": image,
+            "placeholder": placeholder,
         }
         if default_value:
             try:
@@ -43,14 +42,14 @@ if is_pyodide_context():
         js.self.postMessage(**msg)
         return await _wait_for_result()
 else:
-    async def number(prompt: str = None, title: str = "Number Input", image=None,
+    async def number(prompt: str = None, title: str = "Number Input", placeholder: str = None, image=None,
                      default_value: typing.Union[int, float] = None, in_multiple: bool = False):
         """
         prompts the user to input a number
 
         :param prompt: the prompt the user will be shown
         :param title: the title of the number-box
-        :param number_type: the type of expected number
+        :param placeholder: the placeholder-text to be displayed in the box while it is empty
         :param image: displays an image in the number-box
         :param default_value: optional default value
         :param in_multiple: just for testing purposes
@@ -73,7 +72,8 @@ else:
         res = await prompt_toolkit.PromptSession().prompt_async(
             prompt,
             validator=validator,
-            default=default_value or ''
+            default=default_value or '',
+            placeholder=placeholder,
         )
         try:
             return int(res)
