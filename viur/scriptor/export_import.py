@@ -538,6 +538,29 @@ def export_to_table(data, structure, filename="export.csv",delimiter=","):
         csv_delimiter=delimiter,
     )
 
+def export_to_excel(data, structure, filename="export.xlsx"):
+    if not filename.endswith(".xlsx"):
+       raise ValueError("filename must end in .xlsx")
+
+    return  File.from_table(
+        table=_format_for_table(data, structure),
+        filename=filename,
+        auto_str=True,
+        fill_empty=True
+    )
+
+def export_to_csv(data, structure, filename="export.csv",delimiter=","):
+    if not filename.endswith(".csv"):
+       raise ValueError("filename must end in .csv")
+
+    return  File.from_table(
+        table=_format_for_table(data, structure),
+        filename=filename,
+        auto_str=True,
+        fill_empty=True,
+        csv_delimiter=delimiter
+
+    )
 
 def export_to_json(data, structure, filename="export.json"):
     return File(json.dumps(_format_for_table(data, structure), indent=4, sort_keys=True).encode(), filename)
