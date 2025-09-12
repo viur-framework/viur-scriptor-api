@@ -1,8 +1,17 @@
+## [unreleased]
+
+### 🚀 Features
+
+- Add export_to_excel and export_to_csv
 ## [1.6.0] - 2025-09-09
 
 ### 🚀 Features
 
 - Add placeholder for number Dialogs
+
+### ⚙️ Miscellaneous Tasks
+
+- Update Version
 ## [1.5.0] - 2025-09-09
 
 ### 🚜 Refactor

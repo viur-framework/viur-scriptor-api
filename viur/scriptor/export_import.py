@@ -6,6 +6,7 @@ from typing import Literal
 from .module_parts import TreeModule
 from .file import File
 from ._utils import flatten_dict
+from viur.scriptor import modules
 
 
 def _preextractor_for_simple_bones(fieldname):
@@ -529,13 +530,13 @@ def _extract_with_strategy(pre_extracted_data, extraction_strategy):
     return extracted_data
 
 
-def export_to_table(data, structure, filename="export.csv",delimiter=","):
+def export_to_table(data, structure, filename="export.csv",csv_delimiter=","):
     return File.from_table(
         _format_for_table(data, structure),
         filename=filename,
         auto_str=True,
         fill_empty=True,
-        csv_delimiter=delimiter,
+        csv_delimiter=csv_delimiter,
     )
 
 def export_to_excel(data, structure, filename="export.xlsx"):
@@ -549,7 +550,7 @@ def export_to_excel(data, structure, filename="export.xlsx"):
         fill_empty=True
     )
 
-def export_to_csv(data, structure, filename="export.csv",delimiter=","):
+def export_to_csv(data, structure, filename="export.csv",csv_delimiter=","):
     if not filename.endswith(".csv"):
        raise ValueError("filename must end in .csv")
 
@@ -558,13 +559,28 @@ def export_to_csv(data, structure, filename="export.csv",delimiter=","):
         filename=filename,
         auto_str=True,
         fill_empty=True,
-        csv_delimiter=delimiter
+        csv_delimiter=csv_delimiter
 
     )
 
 def export_to_json(data, structure, filename="export.json"):
     return File(json.dumps(_format_for_table(data, structure), indent=4, sort_keys=True).encode(), filename)
 
+async def export_module(name="",filename="export.json",csv_delimiter=","):
+    _module = await modules.get_module(name)
+    structure = await _module.structure()
+    data = []
+    async for entry in _module.list():
+        data.append(entry)
+    match filename.split(".")[-1]:
+        case "json":
+            return export_to_json(data, structure, filename=filename)
+        case "xlsx":
+            return export_to_excel(data, structure,filename=filename)
+        case "csv":
+            return export_to_csv(data, structure, filename=filename, csv_delimiter=csv_delimiter)
+        case _:
+            raise NotImplementedError()
 
 def generate_key_replacement_mapping(table_header_keys, replacekeys):
     replace_bone_name_mapping = {}
