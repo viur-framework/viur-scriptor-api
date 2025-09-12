@@ -529,14 +529,14 @@ def _extract_with_strategy(pre_extracted_data, extraction_strategy):
     return extracted_data
 
 
-def export_to_table(data, structure, filename="export.csv"):
-    csv_file = File.from_table(
+def export_to_table(data, structure, filename="export.csv",delimiter=","):
+    return File.from_table(
         _format_for_table(data, structure),
         filename=filename,
         auto_str=True,
-        fill_empty=True
+        fill_empty=True,
+        csv_delimiter=delimiter,
     )
-    return csv_file
 
 
 def export_to_json(data, structure, filename="export.json"):
@@ -669,5 +669,6 @@ async def import_from_table(
                 res = await add_or_edit_function(**edit_params)
             except Exception as e:
                 exception_callback(e, edit_params)
-                res = {"action": f"""{type(e).__name__}: {'\n'.join(e.args)}"""}
+                new_line = "\n"
+                res = {"action": f"""{type(e).__name__}: {new_line.join(e.args)}"""}
             server_result_callback(res)
