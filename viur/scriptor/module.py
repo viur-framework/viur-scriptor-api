@@ -2,7 +2,7 @@ import traceback
 import requests
 from urllib.parse import urlencode as _urlencode
 from .module_parts import BaseModule, ListModule, TreeModule, SingletonModule, Method
-from .http_errors import get_exception_by_code,HTTPException
+from .http_errors import get_exception_by_code, HTTPException
 from ._utils import join_url
 from .requests import WebRequest
 from ._utils import is_pyodide_context, flatten_dict
@@ -21,13 +21,20 @@ class Modules:
     used to retrieve modules from the viur-backend
     """
 
-    def __init__(self, base_url: str, username: str, password: str, login_skey: str = None):
+    def __init__(
+        self,
+        base_url: str,
+        username: str = None,
+        password: str = None,
+        login_skey: str = None,
+        cookies: str = None
+    ):
         self._base_url = base_url
         self._username = username
         self._password = password
         self._login_skey = login_skey
         self._session = None
-        self._cookies = None
+        self._cookies = cookies
         self._modules = None
 
     def is_logged_in(self):
@@ -44,27 +51,38 @@ class Modules:
     else:
         async def init(self):
             self._session = requests.sessions.Session()
-            skey = self._session.get(self._base_url + "/json/skey")
 
-            kwargs = {
-                "data": {
-                    "skey": skey.json(),
-                    "name": self._username,
-                    "password": self._password
+            def login():
+                skey = self._session.get(self._base_url + "/json/skey")
+
+                kwargs = {
+                    "data": {
+                        "skey": skey.json(),
+                        "name": self._username,
+                        "password": self._password
+                    }
                 }
-            }
-            if self._login_skey:
-                kwargs["headers"] = {"X-Scriptor": self._login_skey}
+                if self._login_skey:
+                    kwargs["headers"] = {"X-Scriptor": self._login_skey}
 
-            response = self._session.post(self._base_url + "/vi/user/auth_userpassword/login?@vi-admin=true", **kwargs)
+                response = self._session.post(self._base_url + "/vi/user/auth_userpassword/login?@vi-admin=true",
+                                              **kwargs)
 
-            Dialog.print(f"""LOGIN RESPONSE:\n{response.content = }""")
+                Dialog.print(f"""LOGIN RESPONSE:\n{response.content = }""")
 
-            if response.status_code == 200 and (b"""JSON(("OKAY"))""" in response.content or response.json() != "FAILURE"):
-                Dialog.print("LOGIN SUCCESS")
-                self._cookies = requests.sessions.cookiejar_from_dict(self._session.cookies.get_dict())
+                if response.status_code == 200 and (
+                    b"""JSON(("OKAY"))""" in response.content or response.json() != "FAILURE"):
+                    Dialog.print("LOGIN SUCCESS")
+                    self._cookies = requests.sessions.cookiejar_from_dict(self._session.cookies.get_dict())
+                else:
+                    Dialog.print("LOGIN FAILED")
+
+            if not self._cookies:
+                login()
             else:
-                Dialog.print("LOGIN FAILED")
+                for key,value in self._cookies.items():
+                    cookie_obj = requests.cookies.create_cookie(domain=self._base_url, name=key, value=value)
+                    self._session.cookies.set_cookie(cookie_obj)
 
             resp = await self.viur_request("GET", "/config", renderer="vi")
             try:
@@ -79,7 +97,7 @@ class Modules:
         self._modules = None
         Dialog.print("logout success")
 
-    async def get_module(self, module_name: str):
+    def get_module(self, module_name: str):
         """
         gets a modules from the viur-backend
 
@@ -209,9 +227,9 @@ class Modules:
             if responsedata and all(key in responsedata for key in ["reason", "descr"]):
                 errormessage = f"""{errormessage}\n\nreason: {responsedata["reason"]}\ndescription:\n{responsedata["descr"]}"""
             if exception := get_exception_by_code(response.get_status_code()):
-                raise exception(errormessage,response)
+                raise exception(errormessage, response)
             else:
-                raise HTTPException(response.get_status_code(), "Http Error", errormessage,response)
+                raise HTTPException(response.get_status_code(), "Http Error", errormessage, response)
         try:
             return response.as_object_from_json()
         except json.JSONDecodeError:

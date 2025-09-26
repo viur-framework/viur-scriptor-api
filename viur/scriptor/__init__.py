@@ -39,7 +39,14 @@ if is_pyodide_context():
         await modules.init()
         return True
 else:
-    async def _init_modules(base_url=None, username=None, password=None, login_skey=None, script_params=None):
+    async def _init_modules(
+        base_url=None,
+        username=None,
+        password=None,
+        login_skey=None,
+        script_params=None,
+        cookies=None,
+    ):
         global modules, params
         assert not modules, "already initialized"
         params = script_params
@@ -47,7 +54,9 @@ else:
             modules = Modules(base_url=base_url or os.environ.get('SCRIPTOR_TARGET', None),
                               username=username or os.environ.get('SCRIPTOR_USER', None),
                               password=password or os.environ.get('SCRIPTOR_PASSWORD', None),
-                              login_skey=login_skey)
+                              login_skey=login_skey,
+                              cookies=cookies
+                              )
             await modules.init()
             return True
         except ConnectionError:
