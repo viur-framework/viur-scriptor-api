@@ -97,7 +97,7 @@ class Modules:
         self._modules = None
         Dialog.print("logout success")
 
-    def get_module(self, module_name: str):
+    async def get_module(self, module_name: str):
         """
         gets a modules from the viur-backend
 
