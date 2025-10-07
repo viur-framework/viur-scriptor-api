@@ -1,6 +1,7 @@
 from viur.scriptor._utils import is_pyodide_context
 import typing
 import datetime
+
 if is_pyodide_context():
 
     import pyodide
@@ -11,8 +12,13 @@ else:
     from ._validators import _ConvertableValidator
 
 if is_pyodide_context():
-    async def date(prompt: str = None, use_time: bool = False, image=None,
-                   default_value: typing.Union[str, datetime.date, datetime.datetime] = None):
+    async def date(
+        prompt: str = None,
+        use_time: bool = False,
+        image=None,
+        default_value: typing.Union[str, datetime.date, datetime.datetime] = None,
+        in_multiple: bool = False
+    ):
         """
         prompts the user to input a date
 
@@ -20,6 +26,7 @@ if is_pyodide_context():
         :param use_time: also input time in addition to the date
         :param image: displays an image in the date-box
         :param default_value: optional default value
+        :param in_multiple: If true only the config of the Dialog is returned
         :return: the date entered by the user
         """
         msg = {
@@ -45,7 +52,8 @@ if is_pyodide_context():
                 raise ValueError(
                     f"""The default_value must be a datetime.{"datetime" if use_time else "date"} or an ISO-string-representation of one.""")
             msg["default_value"] = default_value.isoformat()
-
+        if in_multiple:
+            return msg
         js.self.postMessage(**msg)
         timestamp = await _wait_for_result()
         try:
@@ -61,8 +69,13 @@ if is_pyodide_context():
             res = datetime.date.fromtimestamp(timestamp / 1000)
         return res
 else:
-    async def date(prompt: str = None, use_time: bool = False, image=None,
-                   default_value: typing.Union[str, datetime.date, datetime.datetime] = None):
+    async def date(
+        prompt: str = None,
+        use_time: bool = False,
+        image=None,
+        default_value: typing.Union[str, datetime.date, datetime.datetime] = None,
+        in_multiple: bool = False
+    ):
         """
         prompts the user to input a date
 
@@ -70,6 +83,7 @@ else:
         :param use_time: also input time in addition to the date
         :param image: displays an image in the date-box
         :param default_value: optional default value
+        :param in_multiple: just for testing purposes
         :return: the date entered by the user
         """
         if image:
