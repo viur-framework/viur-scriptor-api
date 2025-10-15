@@ -147,10 +147,21 @@ class SingletonModule(BaseModule):
 
 
 class ExtendedModule(BaseModule):
-    async def list(self, params: dict = None, group: str = "", skel_type: str = "", limit: int = None, **kwargs):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._cursor = None
+
+    async def list(
+        self,
+        params: dict = None,
+        group: str = "",
+        skel_type: str = "",
+        limit: int = None,
+        min_limit: int = None,
+        **kwargs
+    ):
         if not params:
             params = {}
-
         _url = kwargs.get('url', '')
         _renderer = kwargs.get('renderer', '')
 
@@ -177,15 +188,21 @@ class ExtendedModule(BaseModule):
                 return
             if cursor:
                 params["cursor"] = cursor
+                self._cursor = cursor
+            if counter >= min_limit:
+                return
             ret = await self._parent.viur_request("GET", _url, params, _renderer)
             fetched = True
             if not ret:
+                self._cursor = None
                 return
             batch = ret['skellist']
             # batch.reverse()
             cursor = ret['cursor']
+            self._cursor = cursor
             if not batch:
                 cursor = None
+                self._cursor = None
 
     async def add(self, params: dict = None, group: str = "", skel_type: str = "", **kwargs):
         _url = kwargs.get('url', '')
@@ -271,7 +288,7 @@ class ListModule(ExtendedModule):
         """
         return await super().add_or_edit(key=key, params=params, group=group, **kwargs)
 
-    async def list(self, params: dict = None, group: str = "", limit: int = None, **kwargs):
+    async def list(self, params: dict = None, group: str = "", limit: int = None, min_limit: int = None, **kwargs):
         """
         retrieves multiple records from the database (all if called without parameters)
 
@@ -279,10 +296,11 @@ class ListModule(ExtendedModule):
         :param group: the group the records belong to
         :param limit: maximum amount of entries that should be fetched.
             Note: The amount of entries per request/batch must be specified as "limit" in the params.
+        :param min_limit: minimum amount of entries that should be fetched if batch size is larger there are more records.
         :param kwargs: additional keyword-arguments
         :return: an asynchronous generator yielding the retrieved records
         """
-        async for i in super().list(params=params, group=group, limit=limit, **kwargs):
+        async for i in super().list(params=params, group=group, limit=limit, min_limit=min_limit ** kwargs):
             yield i
 
     async def add(self, params: dict = None, group: str = "", **kwargs):
@@ -407,7 +425,7 @@ class TreeModule(ExtendedModule):
         """
         return await super().edit(key=key, params=params, skel_type=skel_type, **kwargs)
 
-    async def list(self, params: dict = None, skel_type: str = "", limit: int = None, **kwargs):
+    async def list(self, params: dict = None, skel_type: str = "", limit: int = None, min_limit: int = None, **kwargs):
         """
         retrieves multiple records from the database (all if called without parameters)
 
@@ -418,7 +436,7 @@ class TreeModule(ExtendedModule):
         :param kwargs: additional keyword-arguments
         :return: an asynchronous generator yielding the retrieved records
         """
-        async for i in super().list(params=params, skel_type=skel_type, limit=limit, **kwargs):
+        async for i in super().list(params=params, skel_type=skel_type, limit=limit, min_limit=min_limit, **kwargs):
             yield i
 
     async def add(self, params: dict = None, skel_type: str = "", **kwargs):
