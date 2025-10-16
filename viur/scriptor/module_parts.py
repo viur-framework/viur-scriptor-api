@@ -189,7 +189,7 @@ class ExtendedModule(BaseModule):
             if cursor:
                 params["cursor"] = cursor
                 self._cursor = cursor
-            if counter >= min_limit:
+            if min_limit and counter >= min_limit:
                 return
             ret = await self._parent.viur_request("GET", _url, params, _renderer)
             fetched = True
@@ -433,6 +433,7 @@ class TreeModule(ExtendedModule):
         :param skel_type: the skel_type of the record (either "node" or "leaf")
         :param limit: maximum amount of entries that should be fetched.
             Note: The amount of entries per request/batch must be specified as "limit" in the params.
+        :param min_limit: minimum amount of entries that should be fetched if batch size is larger there are more records.
         :param kwargs: additional keyword-arguments
         :return: an asynchronous generator yielding the retrieved records
         """
