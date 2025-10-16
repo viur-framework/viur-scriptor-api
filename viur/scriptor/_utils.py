@@ -275,7 +275,6 @@ async def gather_async_iterator(async_iterator):
         res = []
         async for i in async_iterator:
             res.append(i)
-            print(i)
         return res
 
     result = await gai_internal(async_iterator)

@@ -300,7 +300,7 @@ class ListModule(ExtendedModule):
         :param kwargs: additional keyword-arguments
         :return: an asynchronous generator yielding the retrieved records
         """
-        async for i in super().list(params=params, group=group, limit=limit, min_limit=min_limit ** kwargs):
+        async for i in super().list(params=params, group=group, limit=limit, min_limit=min_limit, **kwargs):
             yield i
 
     async def add(self, params: dict = None, group: str = "", **kwargs):
