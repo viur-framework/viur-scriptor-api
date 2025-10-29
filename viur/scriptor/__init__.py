@@ -2,6 +2,7 @@ from .requests import WebRequest, WebResponse
 from .dialog import Dialog
 from .file import File
 from .logger import logger
+from .message import Message
 from .module import Modules
 from .http_errors import *
 from ._utils import is_pyodide_context, is_pyodide_in_browser, gather_async_iterator, clear_console
@@ -74,6 +75,7 @@ __all__ = [
     'File',
     'logger',
     'modules',
+    'Message',
     'ConnectionError',
     'gather_async_iterator',
     'params',
