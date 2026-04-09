@@ -251,3 +251,59 @@ class File:
         downloads the file to the users download-directory
         """
         save_file(data=self._data, filename=self.filename)
+
+    async def _upload_to_gcs(self, upload_url: str, mime_type: str):
+        """Uploads file bytes to a Google Cloud Storage resumable upload URL."""
+        from ._utils import is_pyodide_context
+        if is_pyodide_context():
+            import js
+            from pyodide.ffi import to_js
+            js_array = to_js(self._data)
+            blob = js.Blob.new([js_array], to_js({"type": mime_type}))
+            await js.fetch(upload_url, **{
+                "method": "POST",
+                "body": blob,
+                "headers": to_js({"Content-Type": mime_type}),
+                "mode": "no-cors",
+            })
+        else:
+            import requests as _requests
+            _requests.put(upload_url, data=self._data, headers={"Content-Type": mime_type})
+
+    async def upload(self, node: str = None, return_full_skel: bool = False) -> str | dict:
+        """
+        Uploads this file to the ViUR file module.
+
+        :param node: Key of the target parent node (folder). Defaults to root.
+        :param return_full_skel: If ``True``, returns the full file skeleton dict
+            instead of just the upload key.
+        :return: The upload key (``str``) or the full file skeleton (``dict``) if
+            ``return_full_skel`` is ``True``.
+        """
+        if self.filename is None:
+            raise ValueError("Cannot upload a file without a filename.")
+
+        from . import modules
+
+        mime_type = self.detect_mime_type()
+
+        params = {
+            "fileName": self.filename,
+            "mimeType": mime_type,
+            "size": len(self._data),
+        }
+        if node is not None:
+            params["node"] = node
+
+        response = await modules.viur_request("SECURE_POST", "/file/getUploadURL", params=params)
+        upload_url = response["values"]["uploadUrl"]
+        upload_key = response["values"]["uploadKey"]
+
+        await self._upload_to_gcs(upload_url, mime_type)
+
+        await modules.viur_request("SECURE_POST", "/file/add/leaf", params={"key": upload_key})
+
+        if return_full_skel:
+            result = await modules.viur_request("GET", f"/file/view/leaf/{upload_key}")
+            return result.get("values", result)
+        return upload_key
