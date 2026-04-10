@@ -1,3 +1,66 @@
+## [1.14.0] - 2026-04-09
+
+### 🚀 Features
+
+- Add `upload` method for `File` class ([b19bbea](https://github.com/viur-framework/viur-scriptor-api/commit/b19bbea6d7e2de84f91afed4048e54aae8a43ca0))
+
+### ⚙️ Miscellaneous Tasks
+
+- Update Version ([97f400a](https://github.com/viur-framework/viur-scriptor-api/commit/97f400a85a9560b458cfd34e48f85a1ebcddab1a))
+## [1.13.0] - 2025-10-29
+
+### 🚀 Features
+
+- Add message module ([70d18a3](https://github.com/viur-framework/viur-scriptor-api/commit/70d18a384d55976f3de0c9bc6a23bfb2ddbd87bf))
+
+### ⚙️ Miscellaneous Tasks
+
+- Update Version ([9bbd063](https://github.com/viur-framework/viur-scriptor-api/commit/9bbd063b712ee22ef7a0cd258eaa304e9cdede6c))
+## [1.12.0] - 2025-10-16
+
+### 🐛 Bug Fixes
+
+- Remove print statement and add a comma ([372f046](https://github.com/viur-framework/viur-scriptor-api/commit/372f046c2800e016f2d29e64920caa809e45261e))
+
+### ⚙️ Miscellaneous Tasks
+
+- Update Version ([389d707](https://github.com/viur-framework/viur-scriptor-api/commit/389d707e776b8c2f5a87d1fcc95c416955f0243b))
+## [1.11.0] - 2025-10-16
+
+### 🐛 Bug Fixes
+
+- Add check if `min_limit` is None ([2960594](https://github.com/viur-framework/viur-scriptor-api/commit/296059408fdb0417b5dff4d1cba7fd0516800ad7))
+
+### ⚙️ Miscellaneous Tasks
+
+- Update Version ([fa8289d](https://github.com/viur-framework/viur-scriptor-api/commit/fa8289d4cb906f5917c73e1513db0ba928c79138))
+## [1.10.0] - 2025-10-15
+
+### 🚀 Features
+
+- Add `Cursor` for lists and add `min_limit` ([375bd9f](https://github.com/viur-framework/viur-scriptor-api/commit/375bd9f55406eb2f94c160c798ef896566e79675))
+
+### ⚙️ Miscellaneous Tasks
+
+- Update Version ([f9806e4](https://github.com/viur-framework/viur-scriptor-api/commit/f9806e405b88ee13a0af2f7c85b01423db7fe6bb))
+## [1.9.0] - 2025-10-07
+
+### 🚀 Features
+
+- Add `in_multiple` for Date Dialogs ([38e5196](https://github.com/viur-framework/viur-scriptor-api/commit/38e51964323d83a16c8e1d1fd7cd79b037007e11))
+
+### ⚙️ Miscellaneous Tasks
+
+- Update Version ([dfeabd2](https://github.com/viur-framework/viur-scriptor-api/commit/dfeabd27b672c80af68dff33b41888f810053b5b))
+## [1.8.0] - 2025-10-07
+
+### 🚀 Features
+
+- Add cookies for modules ([#23](https://github.com/viur-framework/viur-scriptor-api/issues/23)) ([021ac24](https://github.com/viur-framework/viur-scriptor-api/commit/021ac24c6aebe4384f00afa8f0383d9fc26737ef))
+
+### ⚙️ Miscellaneous Tasks
+
+- Update Version ([9d28e41](https://github.com/viur-framework/viur-scriptor-api/commit/9d28e41c9d4eeeb9f6c064856d93f9c3e38058b3))
 ## [1.7.0] - 2025-09-12
 
 ### 🚀 Features
