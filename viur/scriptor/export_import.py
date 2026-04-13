@@ -531,6 +531,18 @@ def _extract_with_strategy(pre_extracted_data, extraction_strategy):
 
 
 def export_to_table(data, structure, filename="export.csv",csv_delimiter=","):
+    """
+    Converts data from the database into a ``File`` object that can be exported as CSV or XLSX.
+
+    The file format is determined by the ``filename`` extension: ``.xlsx`` produces an Excel file,
+    any other extension produces a CSV file.
+
+    :param data: list of records as returned by ``list()``
+    :param structure: the module structure as returned by ``structure()``
+    :param filename: name of the resulting file (default: ``"export.csv"``)
+    :param csv_delimiter: column delimiter for CSV output (default: ``","``)
+    :return: a ``File`` object containing the exported data
+    """
     return File.from_table(
         _format_for_table(data, structure),
         filename=filename,
@@ -540,6 +552,15 @@ def export_to_table(data, structure, filename="export.csv",csv_delimiter=","):
     )
 
 def export_to_excel(data, structure, filename="export.xlsx"):
+    """
+    Converts data from the database into an Excel (``.xlsx``) ``File`` object.
+
+    :param data: list of records as returned by ``list()``
+    :param structure: the module structure as returned by ``structure()``
+    :param filename: name of the resulting file, must end in ``.xlsx`` (default: ``"export.xlsx"``)
+    :return: a ``File`` object containing the exported Excel data
+    :raises ValueError: if ``filename`` does not end with ``.xlsx``
+    """
     if not filename.endswith(".xlsx"):
        raise ValueError("filename must end in .xlsx")
 
@@ -551,6 +572,16 @@ def export_to_excel(data, structure, filename="export.xlsx"):
     )
 
 def export_to_csv(data, structure, filename="export.csv",csv_delimiter=","):
+    """
+    Converts data from the database into a CSV ``File`` object.
+
+    :param data: list of records as returned by ``list()``
+    :param structure: the module structure as returned by ``structure()``
+    :param filename: name of the resulting file, must end in ``.csv`` (default: ``"export.csv"``)
+    :param csv_delimiter: column delimiter for CSV output (default: ``","``)
+    :return: a ``File`` object containing the exported CSV data
+    :raises ValueError: if ``filename`` does not end with ``.csv``
+    """
     if not filename.endswith(".csv"):
        raise ValueError("filename must end in .csv")
 
@@ -564,9 +595,29 @@ def export_to_csv(data, structure, filename="export.csv",csv_delimiter=","):
     )
 
 def export_to_json(data, structure, filename="export.json"):
+    """
+    Converts data from the database into a JSON ``File`` object.
+
+    :param data: list of records as returned by ``list()``
+    :param structure: the module structure as returned by ``structure()``
+    :param filename: name of the resulting file (default: ``"export.json"``)
+    :return: a ``File`` object containing the exported JSON data (pretty-printed, keys sorted)
+    """
     return File(json.dumps(_format_for_table(data, structure), indent=4, sort_keys=True).encode(), filename)
 
 async def export_module(name="",filename="export.json",csv_delimiter=","):
+    """
+    Exports all records of a ViUR module into a ``File`` object.
+
+    Fetches all records from the module and exports them into the format determined by the
+    ``filename`` extension: ``.json``, ``.xlsx``, or ``.csv``.
+
+    :param name: name of the module to export
+    :param filename: name of the resulting file including the extension (default: ``"export.json"``)
+    :param csv_delimiter: column delimiter when exporting as CSV (default: ``","``)
+    :return: a ``File`` object containing all exported records
+    :raises NotImplementedError: if the file extension is not ``.json``, ``.xlsx``, or ``.csv``
+    """
     _module = await modules.get_module(name)
     structure = await _module.structure()
     data = []
@@ -583,6 +634,16 @@ async def export_module(name="",filename="export.json",csv_delimiter=","):
             raise NotImplementedError()
 
 def generate_key_replacement_mapping(table_header_keys, replacekeys):
+    """
+    Builds a mapping from old column names to new column names for use with ``map_old_keys_to_new_keys``.
+
+    Prefix-matched keys (e.g. ``"parententry.0.dest.key"``) are renamed consistently when their
+    base bone name appears in ``replacekeys``.
+
+    :param table_header_keys: list of column names as they appear in the exported table
+    :param replacekeys: dict mapping old bone names to new bone names, e.g. ``{"parententry": "node"}``
+    :return: dict mapping old column names to their renamed equivalents
+    """
     replace_bone_name_mapping = {}
     for table_header_key in table_header_keys:
         bone_name, *bone_name_suffix = table_header_key.split('.')
@@ -596,6 +657,14 @@ def generate_key_replacement_mapping(table_header_keys, replacekeys):
 
 
 def map_old_keys_to_new_keys(table_as_dicts, key_replacement_mapping):
+    """
+    Renames columns in a table according to a replacement mapping.
+
+    :param table_as_dicts: iterable of dicts, each representing one row of the table
+    :param key_replacement_mapping: dict mapping old column names to new ones,
+        as produced by ``generate_key_replacement_mapping``
+    :return: generator yielding the renamed rows as dicts
+    """
     for item in table_as_dicts:
         out_item = {}
         for key, value in item.items():
@@ -604,6 +673,15 @@ def map_old_keys_to_new_keys(table_as_dicts, key_replacement_mapping):
 
 
 def filter_module_structure_with_withelist(structure, whitelist):
+    """
+    Returns a copy of ``structure`` that only contains bones listed in ``whitelist``.
+
+    Use this to restrict an export or import to a specific subset of fields.
+
+    :param structure: the module structure as returned by ``structure()``
+    :param whitelist: list of bone names to keep
+    :return: a filtered copy of ``structure``
+    """
     filtered_module_structure = deepcopy(structure)
     filtered_module_structure["structure"] = {}
     for key in whitelist:
@@ -615,6 +693,15 @@ def filter_module_structure_with_withelist(structure, whitelist):
 
 
 def filter_module_structure_with_blacklist(structure, blacklist):
+    """
+    Returns a copy of ``structure`` with all bones listed in ``blacklist`` removed.
+
+    Use this to exclude specific fields from an export or import.
+
+    :param structure: the module structure as returned by ``structure()``
+    :param blacklist: list of bone names to remove
+    :return: a filtered copy of ``structure``
+    """
     filtered_module_structure = deepcopy(structure)
     for key in blacklist:
         try:
@@ -654,6 +741,25 @@ async def import_from_table(
         server_result_callback=None,
         exception_callback=None
 ):
+    """
+    Imports records from a table (e.g. from a CSV or Excel file) into a ViUR module.
+
+    Each row of ``table_as_dicts`` is written to the module using ``edit``, ``add_or_edit``, or
+    ``add``, depending on ``add_or_edit_mode``. The table columns must match the bone names of the
+    module's structure (as exported by ``export_to_table`` or ``export_to_csv``).
+
+    :param table_as_dicts: iterable of dicts, each representing one row (e.g. from ``File.to_table()``)
+    :param module: the module to import into (a ``ListModule``, ``TreeModule``, etc.)
+    :param structure: the module structure as returned by ``structure()``; fetched automatically if omitted
+    :param add_or_edit_mode: one of ``"edit"`` (default), ``"add_or_edit"``, or ``"add"``
+    :param tree_skel_type: required for ``TreeModule``; either ``"leaf"`` or ``"node"``
+    :param dry_run: if ``True``, the data is processed but not written to the database
+    :param progress_callback: called with ``index`` and ``total`` keyword arguments before each record
+    :param query_params_callback: called with the prepared request params dict before each request
+    :param server_result_callback: called with the server's response dict after each request
+    :param exception_callback: called with ``(exception, params)`` when a request raises an exception
+    :raises ValueError: if ``tree_skel_type`` is missing or invalid for a ``TreeModule``
+    """
     if progress_callback is None:
         progress_callback = _do_nothing
     if exception_callback is None:

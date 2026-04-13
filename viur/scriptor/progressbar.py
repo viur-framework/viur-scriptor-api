@@ -5,6 +5,14 @@ if is_pyodide_context():
 
 
 class ProgressBar:
+    """
+    Displays or updates a progress bar during long-running operations.
+
+    In the browser (Pyodide) context a visual progress bar is rendered in the UI. In the CLI
+    context progress information is printed to stdout. Call ``ProgressBar.unset()`` when the
+    operation is complete to hide the progress bar.
+    """
+
     if is_pyodide_context():
         @staticmethod
         def set(percent: int = 0, current_step: int = -1, total_steps: int = -1, text: str = ""):

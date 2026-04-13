@@ -3,6 +3,15 @@ import typing
 
 
 class BaseModule:
+    """
+    Base class for all ViUR module types. Not meant to be instantiated directly.
+
+    Provides common operations like ``view``, ``edit``, ``add_or_edit``, ``preview``, and
+    ``structure`` that are shared across ``ListModule``, ``TreeModule``, and ``SingletonModule``.
+    Custom server-side methods exposed via ``@exposed`` are accessible as attributes after
+    being registered with ``register_route``.
+    """
+
     def __init__(self, name: str, parent):
         super().__init__()
         self._name = name
@@ -26,6 +35,12 @@ class BaseModule:
         self._name = value
 
     def register_route(self, name: str, method: object):
+        """
+        Registers a custom server-side method so it can be called as an attribute on this module.
+
+        :param name: the attribute name under which the method will be accessible
+        :param method: the ``Method`` instance to register
+        """
         self._routes[name] = method
 
     @staticmethod
@@ -147,6 +162,13 @@ class SingletonModule(BaseModule):
 
 
 class ExtendedModule(BaseModule):
+    """
+    Extends ``BaseModule`` with ``list``, ``add``, and ``delete`` operations.
+
+    Serves as the shared base for ``ListModule`` and ``TreeModule``. Not meant to be
+    instantiated directly.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._cursor = None
@@ -160,6 +182,19 @@ class ExtendedModule(BaseModule):
         min_limit: int = None,
         **kwargs
     ):
+        """
+        Retrieves multiple records from the database as an async generator.
+
+        Automatically follows pagination cursors until all matching records have been yielded.
+
+        :param params: filter parameters to pass to the database
+        :param group: the group the records belong to
+        :param skel_type: the skel type (for ``TreeModule``; either ``"node"`` or ``"leaf"``)
+        :param limit: maximum number of records to yield; fetches all if omitted
+        :param min_limit: stop fetching after at least this many records have been yielded
+        :param kwargs: additional keyword-arguments
+        :return: an async generator yielding the retrieved records
+        """
         if not params:
             params = {}
         _url = kwargs.get('url', '')
@@ -205,6 +240,15 @@ class ExtendedModule(BaseModule):
                 self._cursor = None
 
     async def add(self, params: dict = None, group: str = "", skel_type: str = "", **kwargs):
+        """
+        Adds a new record to the database.
+
+        :param params: field values for the new record
+        :param group: the group the new record belongs to
+        :param skel_type: the skel type (for ``TreeModule``; either ``"node"`` or ``"leaf"``)
+        :param kwargs: additional keyword-arguments
+        :return: the newly created record with structure- and error-information
+        """
         _url = kwargs.get('url', '')
         _renderer = kwargs.get('renderer', '')
         url = self._build_url(action='add', url=_url, module=self._name, group=group, skel_type=skel_type)
@@ -453,6 +497,17 @@ class TreeModule(ExtendedModule):
 
 
 class Method:
+    """
+    Represents a custom server-side method exposed on a ViUR module (e.g. via ``@exposed``).
+
+    ``Method`` instances are created automatically by ``Modules.get_module`` and registered
+    on the module instance via ``register_route``. They are callable and dispatch HTTP requests
+    to the corresponding server-side handler.
+
+    If the method supports multiple HTTP verbs (e.g. ``GET`` and ``POST``), the specific variant
+    can be selected as an attribute: ``module.my_method.get(...)`` or ``module.my_method.post(...)``.
+    """
+
     def __init__(self, name: str, module: BaseModule, methods: list[str] | None = None,
                  skey: str = None, parent: bool = True):
         if methods is None:
@@ -474,16 +529,24 @@ class Method:
 
     @property
     def methods(self):
+        """List of supported HTTP methods in lowercase (e.g. ``["get", "post"]``)."""
         return [method.lower() for method in self._methods]
 
     @property
     def name(self):
+        """The name of the server-side method."""
         return self._name
 
     def support_method(self, name: str) -> bool:
+        """
+        Returns ``True`` if the given HTTP method is supported.
+
+        :param name: HTTP method name (case-insensitive, e.g. ``"GET"``)
+        """
         return name.lower() in self.methods
 
     def is_supporting_multiple_methods(self):
+        """Returns ``True`` if this method supports more than one HTTP verb."""
         return len(self.methods) > 1
 
     async def __call__(self, *args, **kwargs):

@@ -5,6 +5,13 @@ if is_pyodide_context():
 
 
 class Message:
+    """
+    Sends system messages to the user interface.
+
+    In the browser (Pyodide) context a toast-style notification is displayed. In the CLI
+    context the message is printed to stdout.
+    """
+
     if is_pyodide_context():
         @staticmethod
         def send(type: str = "success", title: str = "", text: str = "", ):

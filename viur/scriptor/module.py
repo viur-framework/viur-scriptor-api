@@ -38,11 +38,23 @@ class Modules:
         self._modules = None
 
     def is_logged_in(self):
+        """
+        Returns ``True`` if a session with valid cookies is currently active.
+
+        :return: ``True`` if logged in, ``False`` otherwise
+        """
         return self._session is not None and self._cookies is not None
 
     if is_pyodide_context():
 
         async def init(self):
+            """
+            Initialises the connection to the ViUR backend and fetches the list of available modules.
+
+            In the Pyodide (browser) context this relies on the browser session already being
+            authenticated; in the native Python context it performs a username/password login first.
+            Must be called before any module can be retrieved with ``get_module``.
+            """
             resp = await self.viur_request("GET", "/config", renderer="vi")
             try:
                 self._modules = resp["modules"]
@@ -50,6 +62,14 @@ class Modules:
                 self._modules = []
     else:
         async def init(self):
+            """
+            Initialises the connection to the ViUR backend and fetches the list of available modules.
+
+            In the native Python context this performs a username/password login and stores the
+            resulting session cookies. If cookies were already provided at construction time, the
+            login step is skipped. Must be called before any module can be retrieved with
+            ``get_module``.
+            """
             self._session = requests.sessions.Session()
 
             def login():
@@ -91,6 +111,12 @@ class Modules:
                 self._modules = []
 
     async def logout(self):
+        """
+        Logs out of the ViUR backend and clears the active session.
+
+        After calling this method, ``is_logged_in()`` returns ``False`` and ``get_module``
+        can no longer be used until ``init()`` is called again.
+        """
         await self.viur_request("SECURE_POST", "/json/user/logout")
         self._session = None
         self._cookies = None

@@ -368,8 +368,6 @@ raised.
         await testfile.save_dialog()
 
 
-Uploading Files to ViUR
------------------------
 
 upload
 ~~~~~~
