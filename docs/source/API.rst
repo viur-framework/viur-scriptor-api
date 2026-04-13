@@ -39,6 +39,10 @@ API Reference
 .. autoclass:: viur.scriptor.module.SingletonModule
     :members: name, preview, structure, view, edit
 
+.. automodule:: viur.scriptor.export_import
+    :members: export_module, export_to_csv, export_to_excel, export_to_json, import_from_table,
+              filter_module_structure_with_withelist, filter_module_structure_with_blacklist
+
 .. autoclass:: viur.scriptor.message.Message
     :members: send
 

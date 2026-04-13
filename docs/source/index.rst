@@ -28,5 +28,6 @@ potential of the Viur framework by utilizing the Scriptor for your scripting nee
    request
    directoryhandler
    modules
+   export_import
    utils
    API
