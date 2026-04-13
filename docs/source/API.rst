@@ -2,8 +2,8 @@ API Reference
 =============
 
 .. autoclass:: viur.scriptor.file.File
-    :members: from_string, from_bytes, from_table, get_filename, as_bytes, as_text, as_object_from_json,
-              as_list_table, as_dict_table, open_dialog, download, get_size
+    :members: from_string, from_bytes, from_url, from_table, get_filename, as_bytes, as_text, as_object_from_json,
+              as_list_table, as_dict_table, open_dialog, download, get_size, save_dialog, upload
 
 .. autoclass:: viur.scriptor.requests.WebRequest
     :members: get, download, post, put, delete, request
@@ -12,7 +12,7 @@ API Reference
     :members: get_url, get_status_code, get_content
 
 .. autoclass:: viur.scriptor.dialog.Dialog
-    :members: print, alert, select, confirm, text, number, date, show_diff, table, multiple
+    :members: print, alert, select, confirm, text, number, date, show_diff, table, multiple, raw_html
 
 .. autoclass:: viur.scriptor.progressbar.ProgressBar
     :members: set, unset

@@ -42,6 +42,41 @@ files like xlsx, zip, pdf, etc. (Also there are extra convenience-methods for ha
         print("Please check your downloads. You should have a new file called hello_world.txt")
 
 
+from_url
+~~~~~~~~
+``from_url`` downloads a file directly from a URL and loads it into Scriptor as a ``File``
+object. The request goes through the ViUR backend session, so the same authentication cookies
+are used — which means it works for URLs on the same ViUR server without extra login.
+
+By default the filename is taken from the server response. You can override it with the
+``filename`` parameter.
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        file = await File.from_url("https://example.com/report.pdf")
+        print(file.get_filename())  # filename from the response
+        file.download()
+
+
+With a custom filename:
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        file = await File.from_url(
+            "https://example.com/report.pdf",
+            filename="my_report.pdf"
+        )
+        file.download()
+
+
 from_table
 ~~~~~~~~~~
 This method can handle two different representations of tables and create a xlsx- or csv-file from them.

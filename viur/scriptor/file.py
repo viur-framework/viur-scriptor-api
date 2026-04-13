@@ -65,9 +65,10 @@ class File:
     @classmethod
     async def from_url(cls, url: str, filename: str | None = None):
         """
-        creates a binary file from ``bytes``
-        :param url: ``str`` the url where the file can be downloaded from
-        :param filename: name the file should have
+        downloads a file from a URL and wraps it in a ``File`` object
+
+        :param url: URL to download the file from
+        :param filename: name the file should have; if omitted, the filename is taken from the response
         :return: ``File``-object
         """
         from . import modules

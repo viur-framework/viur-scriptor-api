@@ -267,6 +267,50 @@ This is what ``show_diff`` is for. With it, you can show the names of changed fi
         )
 
 
+Raw HTML
+--------
+``Dialog.raw_html`` renders arbitrary HTML in the Scriptor output area. This is useful for
+displaying formatted content — highlighted text, links, images, or structured layouts — that
+would be awkward to express with plain text.
+
+.. note::
+   ``Dialog.raw_html`` is only available in the browser context (Pyodide). In the CLI it
+   prints the raw HTML string to stdout.
+
+``raw_html`` must be awaited. It shows the HTML and then waits for the user to click a
+continue button before the script proceeds.
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        await Dialog.raw_html("<h2>Summary</h2><p>Everything went <b>OK</b>.</p>")
+
+
+It also supports ``in_multiple=True``, so it can be embedded inside a ``Dialog.multiple``
+to show a static HTML label or description above other input fields:
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        components = {
+            "info":  await Dialog.raw_html("<b>Please fill in your contact details:</b>", in_multiple=True),
+            "name":  await Dialog.text("Name", in_multiple=True),
+            "email": await Dialog.text("E-Mail", in_multiple=True),
+        }
+        result = await Dialog.multiple(
+            title="Contact",
+            components=components,
+            send_button_text="Submit"
+        )
+        print(result["name"], result["email"])
+
+
 Table
 -----
 The last remaining Dialog-type is the ``table``. It is used to show tabular data, but can also be used to select rows.
