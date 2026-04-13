@@ -368,3 +368,54 @@ raised.
         await testfile.save_dialog()
 
 
+Uploading Files to ViUR
+-----------------------
+
+upload
+~~~~~~
+The ``upload``-method uploads the file to the ViUR file module (server-side storage). This is useful when you want
+to store a generated or processed file directly in ViUR instead of sending it to the user's PC. The method returns
+the upload key of the newly created file entry. If you need the full file skeleton (e.g. to get the download URL or
+other metadata), you can pass ``return_full_skel=True``.
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        file = File.from_string("Hello ViUR!", "hello_viur.txt")
+        key = await file.upload()
+        print(f"File uploaded successfully. Key: {key}")
+
+
+By default, the file is uploaded to the root folder of the file module. If you want to upload it into a specific
+folder, pass the key of the target node as ``node``:
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        folder_key = "your-folder-key-here"
+        file = File.from_string("Hello ViUR!", "hello_viur.txt")
+        key = await file.upload(node=folder_key)
+        print(f"File uploaded to folder. Key: {key}")
+
+
+If you need access to the full file skeleton after upload (e.g. to read the download URL or other metadata),
+set ``return_full_skel=True``:
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        file = File.from_string("Hello ViUR!", "hello_viur.txt")
+        skel = await file.upload(return_full_skel=True)
+        print(f"Download URL: {skel['values']['downloadUrl']}")
+        print(f"Full skeleton: {skel}")
+
+
