@@ -318,3 +318,100 @@ There is also an option to select multiple rows:
         ]
         result = await Dialog.table(tbl_head, tbl_data, select=True, multiselect=True)
         print(f"you selected row {result}")
+
+
+Multiple
+--------
+``Dialog.multiple`` combines several input components into a single dialog. The user sees all
+fields at once and confirms everything with one button — instead of having to click through
+several dialogs one after another.
+
+Each component is built by calling the corresponding ``Dialog``-method with ``in_multiple=True``.
+This returns the component's configuration dict instead of showing it. These dicts are then
+collected into a list or a named dict and passed to ``Dialog.multiple``.
+
+.. note::
+   ``Dialog.multiple`` is only available in the browser context (Pyodide). In the CLI it
+   immediately returns the components unchanged without waiting for user input.
+
+Basic example (list of components)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+When ``components`` is a **list**, the return value is a list of the user's inputs in the
+same order.
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        components = [
+            await Dialog.text("First name", in_multiple=True),
+            await Dialog.text("Last name", in_multiple=True),
+            await Dialog.number("Age", in_multiple=True),
+        ]
+        results = await Dialog.multiple(
+            title="Enter your details",
+            components=components,
+            send_button_text="Submit"
+        )
+        first_name, last_name, age = results
+        print(f"{first_name} {last_name}, age {age}")
+
+
+Named components (dict)
+~~~~~~~~~~~~~~~~~~~~~~~
+When ``components`` is a **dict**, the return value is a dict with the same keys — which makes
+it easier to access individual fields by name.
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        components = {
+            "name":     await Dialog.text("Name", in_multiple=True),
+            "category": await Dialog.select(["A", "B", "C"], in_multiple=True),
+            "date":     await Dialog.date("Date", in_multiple=True),
+        }
+        results = await Dialog.multiple(
+            title="New entry",
+            components=components,
+            send_button_text="Create"
+        )
+        print(results["name"])
+        print(results["category"])
+        print(results["date"])
+
+
+Reusing a dialog (``reuse=True``)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you want to show the same dialog again — for example in a loop to collect several entries —
+you can pass ``reuse=True`` for all calls after the first. This skips re-sending the component
+definitions to the browser and only waits for the next submission.
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        components = {
+            "article": await Dialog.text("Article number", in_multiple=True),
+            "amount":  await Dialog.number("Amount", in_multiple=True),
+        }
+        entries = []
+        first = True
+        while True:
+            results = await Dialog.multiple(
+                title="Scan article",
+                components=components,
+                send_button_text="Add",
+                reuse=not first
+            )
+            first = False
+            entries.append(results)
+            if not await Dialog.confirm("Add another article?"):
+                break
+        print(entries)

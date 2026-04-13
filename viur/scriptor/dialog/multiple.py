@@ -12,10 +12,21 @@ if is_pyodide_context():
         reuse: bool = False
     ):
         """
-        :param title: the header of the component
-        :param components: list of components
-        :param send_button_text: the text of the button at the bottom of the dialog
-        :param reuse: If True, the components are not sent to the JS.
+        Shows multiple input components in a single dialog and waits for the user to submit them.
+
+        Each component is built by calling the corresponding ``Dialog``-method with
+        ``in_multiple=True`` (e.g. ``await Dialog.text(..., in_multiple=True)``).
+        The return value mirrors the structure of ``components``:
+        a ``list`` if ``components`` is a list, or a ``dict`` with the same keys if it is a dict.
+
+        :param title: heading displayed at the top of the dialog
+        :param components: input component configs as a ``list[dict]`` or ``dict[str, dict]``,
+            built with ``in_multiple=True`` on ``Dialog.text``, ``Dialog.number``,
+            ``Dialog.select``, or ``Dialog.date``
+        :param send_button_text: label of the submit button at the bottom of the dialog
+        :param reuse: if ``True``, the component definitions are not re-sent to the browser;
+            use this when showing the same dialog repeatedly in a loop
+        :return: user inputs as a ``list`` or ``dict``, matching the structure of ``components``
         """
         msg = {
             "type": "multiple-dialog",

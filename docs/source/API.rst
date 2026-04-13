@@ -12,7 +12,7 @@ API Reference
     :members: get_url, get_status_code, get_content
 
 .. autoclass:: viur.scriptor.dialog.Dialog
-    :members: print, alert, select, confirm, text, number, date, show_diff, table
+    :members: print, alert, select, confirm, text, number, date, show_diff, table, multiple
 
 .. autoclass:: viur.scriptor.progressbar.ProgressBar
     :members: set, unset
