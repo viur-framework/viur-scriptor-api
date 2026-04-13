@@ -39,5 +39,8 @@ API Reference
 .. autoclass:: viur.scriptor.module.SingletonModule
     :members: name, preview, structure, view, edit
 
+.. autoclass:: viur.scriptor.message.Message
+    :members: send
+
 .. automodule:: viur.scriptor.utils
     :members: extract_items, map_extract_items

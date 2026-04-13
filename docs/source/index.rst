@@ -21,6 +21,7 @@ potential of the Viur framework by utilizing the Scriptor for your scripting nee
    getting-started
    async
    dialog
+   message
    file
    progressbar
    logger
