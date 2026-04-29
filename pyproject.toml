@@ -9,7 +9,7 @@ authors = [
   { name = "Mausbrand Informationssysteme GmbH", email = "devs@viur.dev" },
 ]
 maintainers = [
-    { name = "Arne Gudermann, email = "ag@mausbrand.de" }
+    { name = "Arne Gudermann", email = "ag@mausbrand.de" }
 ]
 description = "This is the internal Scriptor library that the viur-scriptor utilizes. The API includes components for networking as well as parts related to the Scriptor's files."
 readme = "README.md"
