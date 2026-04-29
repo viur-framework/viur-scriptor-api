@@ -8,6 +8,9 @@ dynamic = ["version"]
 authors = [
   { name = "Mausbrand Informationssysteme GmbH", email = "devs@viur.dev" },
 ]
+maintainers = [
+    { name = "Arne Gudermann, email = "ag@mausbrand.de" }
+]
 description = "This is the internal Scriptor library that the viur-scriptor utilizes. The API includes components for networking as well as parts related to the Scriptor's files."
 readme = "README.md"
 license = "MIT"
@@ -20,12 +23,12 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "requests==2.31.0",
-    "openpyxl==3.1.5",
-    "prompt_toolkit==3.0.47",
-    "simple-term-menu==1.6.4",
-    "chardet==5.2.0",
-    "python-magic==0.4.27",
+    "requests~=2.0",
+    "openpyxl~=3.0",
+    "prompt_toolkit~=3.0",
+    "simple-term-menu~=1.0",
+    "chardet~=5.0",
+    "python-magic~=0.4",
 ]
 
 [tool.flit.metadata]
