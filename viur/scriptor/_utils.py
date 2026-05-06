@@ -146,7 +146,7 @@ if not is_pyodide_context():
         else:
             path = pathlib.Path.home() / 'Scriptor_Downloads'
             print(f"""Warning: No default directory for saving files set. You can define in the """
-                  f"""environment-variable SCRIPTOR_DEFAULT_SAVE_DIRECTORY. Your files will be saved in {str(p)}.""")
+                  f"""environment-variable SCRIPTOR_DEFAULT_SAVE_DIRECTORY. Your files will be saved in {str(path)}.""")
         if not path.exists():
             path.mkdir(parents=True, exist_ok=True)
         if path.is_dir():
