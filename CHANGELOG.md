@@ -1,3 +1,21 @@
+## [1.14.3] - 2026-05-06
+
+### 🐛 Bug Fixes
+
+- Fix undefined path variable in warning message for saving files ([#26](https://github.com/viur-framework/viur-scriptor-api/issues/26)) ([feb0bfa](https://github.com/viur-framework/viur-scriptor-api/commit/feb0bfa5bca1dbcdc5c53777df95a7f26aa9c7e3))
+
+## [1.14.2] - 2026-04-29
+
+### 🐛 Bug Fixes
+
+- Fix correct TOML syntax in maintainers field ([e302687](https://github.com/viur-framework/viur-scriptor-api/commit/e30268702cf33059c3aad09da7bca5927270962b))
+
+## [1.14.1] - 2026-04-29
+
+### 🐛 Bug Fixes
+
+- Fix set packages versions ([dfe7ac3](https://github.com/viur-framework/viur-scriptor-api/commit/dfe7ac3b86d3451bcc8ecf95dca2de1255f759c8))
+
 ## [1.14.0] - 2026-04-09
 
 ### 🚀 Features
