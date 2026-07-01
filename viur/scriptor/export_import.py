@@ -170,7 +170,7 @@ def _pre_extract_fields_from_using(using_fields_for_single_record):
 
 def _extractor_for_simple_bones(key, conversion_function=str, **kwargs):
     def extractor_for_simple_bones(data):
-        yield key, conversion_function(data[key])
+        yield key, conversion_function(data.get(key, ""))
 
     return extractor_for_simple_bones
 
@@ -178,7 +178,7 @@ def _extractor_for_simple_bones(key, conversion_function=str, **kwargs):
 def _extractor_for_renamed_simple_bones(key, result_keys, conversion_function=str, **kwargs):
     def extractor_for_renamed_simple_bones(data):
         for result_key in result_keys:
-            yield result_key, conversion_function(data[key])
+            yield result_key, conversion_function(data.get(key, ""))
 
     return extractor_for_renamed_simple_bones
 
