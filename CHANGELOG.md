@@ -1,3 +1,9 @@
+## [1.14.4] - 2026-07-07
+
+### 🐛 Bug Fixes
+
+- Use `data.get()` for smooth key retrieval ([#27](https://github.com/viur-framework/viur-scriptor-api/issues/27)) ([01920eb](https://github.com/viur-framework/viur-scriptor-api/commit/01920eb))
+
 ## [1.14.3] - 2026-05-06
 
 ### 🐛 Bug Fixes
