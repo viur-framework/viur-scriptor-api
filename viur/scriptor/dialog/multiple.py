@@ -25,7 +25,9 @@ if is_pyodide_context():
             ``Dialog.select``, or ``Dialog.date``
         :param send_button_text: label of the submit button at the bottom of the dialog
         :param reuse: if ``True``, the component definitions are not re-sent to the browser;
-            use this when showing the same dialog repeatedly in a loop
+            instead the dialog that is already shown is unlocked again, so its submit button
+            becomes clickable a second time. Use this when showing the same dialog repeatedly
+            in a loop -- without it the dialog stays answered and the script would wait forever.
         :return: user inputs as a ``list`` or ``dict``, matching the structure of ``components``
         """
         msg = {
@@ -35,7 +37,13 @@ if is_pyodide_context():
             "components": json.dumps(components)
         }
 
-        if not reuse:
+        if reuse:
+            # The dialog is still on screen but marked as answered, which disables its
+            # submit button. "reset-answer" unlocks it in place instead of appending a
+            # second dialog to the log. The definition travels along so the browser can
+            # rebuild the dialog if it is gone -- clear_console() wipes the log.
+            js.self.postMessage(type="reset-answer", **{k: v for k, v in msg.items() if k != "type"})
+        else:
             js.self.postMessage(**msg)
         res = await _wait_for_result()
         if isinstance(res, str):
