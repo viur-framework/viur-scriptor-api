@@ -1,3 +1,14 @@
+## [1.16.0] - 2026-09-16
+
+### 🚀 Features
+
+- Unlock a `Dialog.multiple` shown with `reuse=True` again through the new `reset-answer` message ([94a3c81](https://github.com/viur-framework/viur-scriptor-api/commit/94a3c81a2510ffa4aada8e99deae033eda4e6a8e))
+
+### ⚙️ Miscellaneous Tasks
+
+- Add window-control adr ([d756e39](https://github.com/viur-framework/viur-scriptor-api/commit/d756e390533cfbb61b008a2f982c2af91d0a8000))
+- Update multiple adr for reset-answer ([ec1562f](https://github.com/viur-framework/viur-scriptor-api/commit/ec1562fb2d0c0a09a29cd4c7499b7962868a711c))
+
 ## [1.15.0] - 2026-09-16
 
 ### 🚀 Features
