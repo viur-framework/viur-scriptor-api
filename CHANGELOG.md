@@ -1,3 +1,14 @@
+## [1.15.0] - 2026-09-16
+
+### 🚀 Features
+
+- Add `prevent_close` to keep a running script from being closed by accident ([16a2b4c](https://github.com/viur-framework/viur-scriptor-api/commit/16a2b4c2066fafb623283c08324b91936a4879a5))
+- Export `clear_console` via `__all__` so scripts actually get it ([16a2b4c](https://github.com/viur-framework/viur-scriptor-api/commit/16a2b4c2066fafb623283c08324b91936a4879a5))
+
+### ⚙️ Miscellaneous Tasks
+
+- Add adrs ([883d2c1](https://github.com/viur-framework/viur-scriptor-api/commit/883d2c1ee6246c1fa435e929dce4dc0a92ed5122))
+
 ## [1.14.4] - 2026-07-07
 
 ### 🐛 Bug Fixes
