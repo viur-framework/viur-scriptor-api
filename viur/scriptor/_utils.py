@@ -293,6 +293,37 @@ if is_pyodide_context():
         return blob
 
 if is_pyodide_context():
+    def prevent_close(prevent: bool = True):
+        """
+            Protects the running script against being closed by accident.
+
+            Closing a script window aborts the running script immediately. A script that must
+            not be interrupted, one writing files or editing entries for example, can call
+            this to make the window ask the user whether to really abort or just minimize
+            instead. The protection is dropped again with ``prevent=False`` and by the end of
+            the script run.
+
+            :param prevent: whether closing the window needs a confirmation
+            :return: None
+        """
+        js.self.postMessage(
+            type="prevent-close",
+            value=bool(prevent)
+        )
+else:
+    def prevent_close(prevent: bool = True):
+        """
+            Protects the running script against being closed by accident.
+
+            Outside the browser there is no script window to protect, so this does nothing.
+
+            :param prevent: whether closing the window needs a confirmation
+            :return: None
+        """
+        pass
+
+
+if is_pyodide_context():
     def clear_console(length=0):
         """
             A helper function to clear console output.

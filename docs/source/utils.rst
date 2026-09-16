@@ -127,3 +127,40 @@ Note that we removed the ``join_with``-parameter, because we need the names as a
         list_table_header, *list_table_data = table_file.as_list_table()
         await Dialog.table(list_table_header, list_table_data)
 
+
+clear_console
+-------------
+Removes the output a script has produced so far from the script window. Pass a ``length`` to keep that many entries
+and drop only what came after them, which is useful for a long-running loop that would otherwise fill the window with
+its own progress output. On the CLI the terminal is cleared instead.
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        for i in range(100):
+            clear_console()
+            logger.info(f"step {i}")
+
+prevent_close
+-------------
+Closing a script window aborts the script that runs in it right away. That is what you usually want, but a script
+that writes files or edits entries should not be stopped halfway through by a stray click. ``prevent_close`` asks the
+script window to confirm before aborting: the user is offered to minimize the window instead of closing it. Call it
+with ``False`` once the critical part is over; at the end of the run the protection is dropped anyway.
+
+Outside of the browser (the CLI) there is no script window, so calling it does nothing.
+
+.. code-block:: python
+
+    #### scriptor ####
+    from viur.scriptor import *
+
+    async def main():
+        prevent_close()
+        for entry in await modules.myModule.list():
+            await modules.myModule.edit(entry, name="new name")
+        prevent_close(False)
+        logger.info("done")

@@ -5,7 +5,7 @@ from .logger import logger
 from .message import Message
 from .module import Modules
 from .http_errors import *
-from ._utils import is_pyodide_context, is_pyodide_in_browser, gather_async_iterator, clear_console
+from ._utils import is_pyodide_context, is_pyodide_in_browser, gather_async_iterator, clear_console, prevent_close
 from .utils import extract_items, map_extract_items
 import os
 from requests.exceptions import ConnectionError
@@ -82,6 +82,8 @@ __all__ = [
     'extract_items',
     'map_extract_items',
     'ProgressBar',
+    'clear_console',
+    'prevent_close',
     'version',
 ]
 

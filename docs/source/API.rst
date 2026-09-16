@@ -48,3 +48,7 @@ API Reference
 
 .. automodule:: viur.scriptor.utils
     :members: extract_items, map_extract_items
+
+.. autofunction:: viur.scriptor.clear_console
+
+.. autofunction:: viur.scriptor.prevent_close
