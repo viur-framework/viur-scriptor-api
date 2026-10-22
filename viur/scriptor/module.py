@@ -274,7 +274,8 @@ class Modules:
                 if isinstance(data, dict):
                     raw_fd = flatten_dict(data)
                 elif isinstance(data, list):
-                    raw_fd = data
+                    # Like flatten_dict() for dicts: FormData would turn None (JS undefined) into "undefined"
+                    raw_fd = [(key, "" if value is None else value) for key, value in data]
                 else:
                     raise ValueError(f"data must be a dict or FormData, but is {type(data)}")
                 fd = FormData.new()
