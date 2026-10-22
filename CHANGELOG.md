@@ -1,3 +1,9 @@
+## [1.16.1] - 2026-10-22
+
+### 🐛 Bug Fixes
+
+- Send `None` in list params as empty string instead of "undefined" (#28) ([80f87bb](https://github.com/viur-framework/viur-scriptor-api/commit/80f87bbcb9155c12944789a984389ff365f5632c))
+
 ## [1.16.0] - 2026-09-16
 
 ### 🚀 Features
