@@ -56,10 +56,7 @@ class Modules:
             Must be called before any module can be retrieved with ``get_module``.
             """
             resp = await self.viur_request("GET", "/config", renderer="vi")
-            try:
-                self._modules = resp["modules"]
-            except KeyError:
-                self._modules = []
+            self._set_modules_from_config(resp)
     else:
         async def init(self):
             """
@@ -105,10 +102,21 @@ class Modules:
                     self._session.cookies.set_cookie(cookie_obj)
 
             resp = await self.viur_request("GET", "/config", renderer="vi")
-            try:
-                self._modules = resp["modules"]
-            except KeyError:
-                self._modules = []
+            self._set_modules_from_config(resp)
+
+    def _set_modules_from_config(self, resp: dict | bytes) -> None:
+        """
+        Stores the module descriptions from the response of ``/vi/config``.
+
+        :param resp: The response of ``/vi/config`` as returned by ``viur_request``.
+        :raises ValueError: If the response is not a JSON object, e.g. an HTML page
+            because of a wrong ``base_url`` or a login page in between.
+        """
+        if not isinstance(resp, dict):
+            raise ValueError(
+                f"Expected a JSON object from /vi/config, got {type(resp).__name__}: {repr(resp)[:200]}"
+            )
+        self._modules = resp.get("modules", {})
 
     async def logout(self):
         """
